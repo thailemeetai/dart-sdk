@@ -3,6 +3,8 @@ import 'package:tinode/src/models/delete-transaction.dart';
 import 'package:tinode/src/models/topic-description.dart';
 import 'package:tinode/src/models/access-mode.dart';
 import 'package:tinode/src/models/credential.dart';
+import 'package:tinode/src/services/logger.dart';
+import 'package:get_it/get_it.dart';
 
 class ServerMessage {
   final CtrlMessage? ctrl;
@@ -14,6 +16,9 @@ class ServerMessage {
   ServerMessage({this.ctrl, this.meta, this.data, this.pres, this.info});
 
   static ServerMessage fromMessage(Map<String, dynamic> msg) {
+    // LoggerService _loggerService = GetIt.I.get<LoggerService>();
+    // _loggerService.log("debug:: meta = ${msg['sub']} - = $msg");
+
     return ServerMessage(
       ctrl: msg['ctrl'] != null ? CtrlMessage.fromMessage(msg['ctrl']) : null,
       meta: msg['meta'] != null ? MetaMessage.fromMessage(msg['meta']) : null,

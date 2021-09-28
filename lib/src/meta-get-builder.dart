@@ -37,7 +37,11 @@ class MetaGetBuilder {
   DateTime _getIms() {
     var cupd = contact != null ? contact?.updated : null;
     var tupd = topic.lastDescUpdate;
-    return tupd.isAfter(cupd!) ? cupd : tupd;
+    if(tupd != null) {
+      return tupd.isAfter(cupd!) ? cupd : tupd;
+    } else {
+      return DateTime(0);
+    }
   }
 
   /// Add query parameters to fetch messages within explicit limits
@@ -95,7 +99,8 @@ class MetaGetBuilder {
 
   /// Add query parameters to fetch subscriptions updated since the last update
   MetaGetBuilder withLaterSub(int? limit) {
-    var ims = topic.isP2P() ? _getIms() : topic.lastSubsUpdate;
+    // var ims = topic.isP2P() ? _getIms() : topic.lastSubsUpdate;
+    var ims = topic.lastSubsUpdate;
     return withSub(ims, limit, null);
   }
 
