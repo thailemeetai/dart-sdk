@@ -335,6 +335,15 @@ class Tinode {
     return ctrl;
   }
 
+  Future<CtrlMessage> loginWithAccessToken(String accessToken) async {
+    var secret = base64.encode(utf8.encode(accessToken));
+    var ctrl = await login('basic', secret, null);
+    print('Tinode::origin::User Id: ' + ctrl.toString());
+
+    _authService.setLastLogin(accessToken);
+    return ctrl;
+  }
+
   /// Wrapper for `login` with token authentication
   Future loginToken(String token, Map<String, dynamic> cred) {
     return login('token', token, cred);

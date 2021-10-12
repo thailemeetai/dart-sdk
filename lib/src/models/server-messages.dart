@@ -5,6 +5,7 @@ import 'package:tinode/src/models/access-mode.dart';
 import 'package:tinode/src/models/credential.dart';
 import 'package:tinode/src/services/logger.dart';
 import 'package:get_it/get_it.dart';
+import 'package:equatable/equatable.dart';
 
 class ServerMessage {
   final CtrlMessage? ctrl;
@@ -113,7 +114,7 @@ class MetaMessage {
   }
 }
 
-class DataMessage {
+class DataMessage extends Equatable {
   /// topic which distributed this message
   final String? topic;
 
@@ -159,6 +160,18 @@ class DataMessage {
       hi: msg['hi'],
     );
   }
+
+  @override
+  List<Object?> get props => [
+    topic,
+    from,
+    head,
+    ts,
+    seq,
+    content,
+    noForwarding,
+    hi,
+  ];
 }
 
 class PresMessage {
