@@ -273,7 +273,7 @@ class Topic {
   /// receiving updates from the server. Unsubscribing will terminate user's relationship with the topic.
   ///
   /// Wrapper for Tinode.leave
-  Future<void> leave(bool unsubscribe) async {
+  Future<CtrlMessage> leave(bool unsubscribe) async {
     if (!isSubscribed && !unsubscribe) {
       return Future.error(Exception('Cannot publish on inactive topic'));
     }
@@ -284,7 +284,7 @@ class Topic {
       _cacheManager.delete('topic', name ?? '');
       _gone();
     }
-    // return CtrlMessage.fromMessage(ctrl);
+    return CtrlMessage.fromMessage(ctrl);
   }
 
   /// Request topic metadata from the serve

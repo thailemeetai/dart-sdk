@@ -87,7 +87,7 @@ class TopicMe extends Topic {
   @override
   void processMetaSub(List<TopicSubscription> subscriptions) {
     for (var sub in subscriptions) {
-      print("Tinode::core::processMetaSub:: sub = ${sub.toString()}");
+      // print("Tinode::core::processMetaSub:: sub = ${sub.toString()}");
       var topicName = sub.topic;
       // Don't show 'me' and 'fnd' topics in the list of contacts.
       if (topicName == topic_names.TOPIC_FND || topicName == topic_names.TOPIC_ME) {
