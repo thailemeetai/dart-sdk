@@ -168,7 +168,7 @@ class Topic {
     _subscribed = value;
   }
 
-  Future<CtrlMessage> subscribe(GetQuery getParams, SetParams? setParams) async {
+  Future<CtrlMessage> subscribe(GetQuery getParams, SetParams? setParams, {String? roomId}) async {
     // If the topic is already subscribed, return resolved promise
     if (isSubscribed) {
       return Future.error(Exception('topic is already subscribed'));
@@ -176,7 +176,7 @@ class Topic {
 
     // Send subscribe message, handle async response.
     // If topic name is explicitly provided, use it. If no name, then it's a new group topic, use "new".
-    var response = await _tinodeService.subscribe(name ?? topic_names.TOPIC_NEW, getParams, setParams);
+    var response = await _tinodeService.subscribe(name ?? topic_names.TOPIC_NEW, getParams, setParams, roomId: roomId);
     var ctrl = response is CtrlMessage ? response : null;
     var meta = response is MetaMessage ? response : null;
 

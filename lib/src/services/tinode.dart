@@ -247,7 +247,7 @@ class TinodeService {
   }
 
   /// Send a topic subscription request
-  Future subscribe(String? topicName, GetQuery getParams, SetParams? setParams) {
+  Future subscribe(String? topicName, GetQuery getParams, SetParams? setParams, {String? roomId}) {
     var packet = _packetGenerator.generate(packet_types.Sub, topicName);
     var data = packet.data as SubPacketData;
 
@@ -256,6 +256,7 @@ class TinodeService {
     }
 
     data.get = getParams;
+    data.roomId = roomId;
 
     if (setParams != null) {
       if (setParams.sub != null) {

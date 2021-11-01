@@ -89,8 +89,9 @@ class SubPacketData extends PacketData {
   String? topic;
   SetParams? set;
   GetQuery? get;
+  String? roomId;
 
-  SubPacketData({this.topic, this.set, this.get});
+  SubPacketData({this.topic, this.set, this.get, this.roomId});
 
   @override
   Map<String, dynamic> toMap() {
@@ -98,6 +99,7 @@ class SubPacketData extends PacketData {
       'topic': topic,
       'set': set,
       'get': get?.toMap(),
+      'room_id': roomId,
     };
   }
 }
