@@ -114,6 +114,38 @@ class MetaMessage {
   }
 }
 
+enum DataMessageType {
+  text, question, sticker
+}
+
+extension DataMessageTypeExtension on DataMessageType {
+  String get value {
+    switch (this) {
+      case DataMessageType.text:
+        return 'text';
+      case DataMessageType.question:
+        return 'question';
+      case DataMessageType.sticker:
+        return 'sticker';
+      default:
+        return '';
+    }
+  }
+
+  static DataMessageType from(String text) {
+    switch (text) {
+      case 'text':
+        return DataMessageType.text;
+      case 'question':
+        return DataMessageType.question;
+      case 'sticker':
+        return DataMessageType.sticker;
+      default:
+        return DataMessageType.text;
+    }
+  }
+}
+
 class DataMessage extends Equatable {
   /// topic which distributed this message
   final String? topic;
@@ -147,6 +179,25 @@ class DataMessage extends Equatable {
     this.noForwarding,
     this.hi,
   });
+
+  DataMessageType getType() {
+    final headData = head;
+    if(headData != null) {
+      if(headData.containsKey('type')) {
+        final type = headData['type'];
+        return DataMessageTypeExtension.from(type);
+      }
+      return DataMessageType.text;
+    }
+    return DataMessageType.text;
+  }
+
+  Map<String, dynamic>? getExtendData() {
+    if(getType() != DataMessageType.text) {
+      return head?['data'];
+    }
+    return null;
+  }
 
   static DataMessage fromMessage(Map<String, dynamic> msg) {
     return DataMessage(
