@@ -231,8 +231,8 @@ class Topic {
   }
 
   /// Create a draft of a message without sending it to the server
-  Message createMessage(dynamic data, bool echo) {
-    return _tinodeService.createMessage(name ?? '', data, echo);
+  Message createMessage(dynamic data, bool echo, {Map<String, dynamic>? head}) {
+    return _tinodeService.createMessage(name ?? '', data, echo, head: head);
   }
 
   /// Publish message created by Topic.createMessage.
@@ -1067,10 +1067,13 @@ class Topic {
         return;
       }
 
+      print('ThaiDebug::Topic: hi = ${(data?.hi ?? 0)} - seq = ${data.seq}');
+
       // Previous is not a gap. Create a new gap.
+      final hi = data.hi ?? 0;
       prev = DataMessage(
-        seq: (data.hi! > 0 ? data.hi! : data.seq)! + 1,
-        hi: data.hi! > 0 ? data.hi : data.seq,
+        seq: (hi > 0 ? hi : data.seq)! + 1,
+        hi: hi > 0 ? hi : data.seq,
       );
       ranges.add(prev);
     }, null, null);

@@ -199,6 +199,13 @@ class DataMessage extends Equatable {
     return null;
   }
 
+  static Map<String, dynamic> generateHead(DataMessageType type, dynamic data) {
+    return {
+      'data': data,
+      'type': type.value
+    };
+  }
+
   static DataMessage fromMessage(Map<String, dynamic> msg) {
     return DataMessage(
       topic: msg['topic'],

@@ -15,6 +15,7 @@ class Message {
   String? from;
   bool? cancelled;
   dynamic content;
+  Map<String, dynamic>? head;
   String? topicName;
   bool? noForwarding;
 
@@ -22,7 +23,7 @@ class Message {
 
   PublishSubject<int> onStatusChange = PublishSubject<int>();
 
-  Message(this.topicName, this.content, this.echo) {
+  Message(this.topicName, this.content, this.echo, {this.head}) {
     _status = message_status.NONE;
     _packetGenerator = GetIt.I.get<PacketGenerator>();
   }
@@ -32,6 +33,9 @@ class Message {
     var data = packet.data as PubPacketData;
     data.content = content;
     data.noecho = !echo;
+    if(head != null) {
+      data.head = head;
+    }
     packet.data = data;
     return packet;
   }
