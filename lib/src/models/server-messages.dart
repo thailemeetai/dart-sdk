@@ -199,10 +199,29 @@ class DataMessage extends Equatable {
     return null;
   }
 
+  String? getReplace() {
+    final headData = head;
+    if(headData != null) {
+      if(headData.containsKey('replace')) {
+        return headData['replace'];
+      }
+      return null;
+    }
+    return null;
+  }
+
   static Map<String, dynamic> generateHead(DataMessageType type, dynamic data) {
     return {
       'data': data,
       'type': type.value
+    };
+  }
+
+  static Map<String, dynamic> generateUpdateHead(DataMessageType type, dynamic data, String seq) {
+    return {
+      'data': data,
+      'type': type.value,
+      'replace': seq //':$seq'
     };
   }
 
@@ -230,6 +249,7 @@ class DataMessage extends Equatable {
     noForwarding,
     hi,
   ];
+
 }
 
 class PresMessage {
