@@ -1061,16 +1061,16 @@ class Topic {
       }
 
       // Found a new gap.
+      final hi = data.hi ?? 0;
+      print('ThaiDebug::Topic: hi = ${(data?.hi ?? "null")} - seq = ${data.seq}');
+
       if (prev.hi != null && prev.hi != 0) {
         // Previous is also a gap, alter it.
-        prev.hi = data.hi! > 0 ? data.hi : data.seq;
+        prev.hi = hi > 0 ? hi : data.seq;
         return;
       }
 
-      print('ThaiDebug::Topic: hi = ${(data?.hi ?? 0)} - seq = ${data.seq}');
-
       // Previous is not a gap. Create a new gap.
-      final hi = data.hi ?? 0;
       prev = DataMessage(
         seq: (hi > 0 ? hi : data.seq)! + 1,
         hi: hi > 0 ? hi : data.seq,

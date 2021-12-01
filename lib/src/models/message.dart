@@ -45,7 +45,7 @@ class Message {
       content: content,
       from: from,
       noForwarding: false,
-      head: {},
+      head: head ?? {},
       hi: null,
       topic: topicName,
       seq: seq,
