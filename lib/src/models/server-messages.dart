@@ -115,7 +115,7 @@ class MetaMessage {
 }
 
 enum DataMessageType {
-  text, question, sticker
+  text, question, sticker, reply
 }
 
 extension DataMessageTypeExtension on DataMessageType {
@@ -127,6 +127,8 @@ extension DataMessageTypeExtension on DataMessageType {
         return 'question';
       case DataMessageType.sticker:
         return 'sticker';
+      case DataMessageType.reply:
+        return 'reply';
       default:
         return '';
     }
@@ -140,10 +142,35 @@ extension DataMessageTypeExtension on DataMessageType {
         return DataMessageType.question;
       case 'sticker':
         return DataMessageType.sticker;
+      case 'reply':
+        return DataMessageType.reply;
       default:
         return DataMessageType.text;
     }
   }
+}
+
+class Reaction extends Equatable {
+  final String? emoji;
+  final String? reactor;
+
+  Reaction({
+    this.emoji,
+    this.reactor
+  });
+
+  static Reaction from(Map<String, dynamic> value) {
+    return Reaction(
+      emoji: value['emoji'],
+      reactor: value['reactor'] as String,
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    emoji,
+    reactor
+  ];
 }
 
 class DataMessage extends Equatable {
@@ -195,6 +222,16 @@ class DataMessage extends Equatable {
   Map<String, dynamic>? getExtendData() {
     if(getType() != DataMessageType.text) {
       return head?['data'];
+    }
+    return null;
+  }
+
+  List<Reaction>? getReactions() {
+    final headData = head;
+    if(headData != null && headData.containsKey('reactions')) {
+      final reactions = head?['reactions'];
+      final res = reactions.length > 0 ? reactions.map((dynamic reaction) => Reaction.from(reaction)).toList().cast<Reaction>() : [];
+      return res;
     }
     return null;
   }
