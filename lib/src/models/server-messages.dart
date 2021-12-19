@@ -115,7 +115,7 @@ class MetaMessage {
 }
 
 enum DataMessageType {
-  text, question, sticker, reply
+  text, question, sticker, reply, reaction, voice
 }
 
 extension DataMessageTypeExtension on DataMessageType {
@@ -127,8 +127,12 @@ extension DataMessageTypeExtension on DataMessageType {
         return 'question';
       case DataMessageType.sticker:
         return 'sticker';
+      case DataMessageType.voice:
+        return 'voice';
       case DataMessageType.reply:
         return 'reply';
+      case DataMessageType.reaction:
+        return 'reaction';
       default:
         return '';
     }
@@ -142,8 +146,12 @@ extension DataMessageTypeExtension on DataMessageType {
         return DataMessageType.question;
       case 'sticker':
         return DataMessageType.sticker;
+      case 'voice':
+        return DataMessageType.voice;
       case 'reply':
         return DataMessageType.reply;
+      case 'reaction':
+        return DataMessageType.reaction;
       default:
         return DataMessageType.text;
     }
@@ -160,6 +168,7 @@ class Reaction extends Equatable {
   });
 
   static Reaction from(Map<String, dynamic> value) {
+    print("Reaction::from # $value");
     return Reaction(
       emoji: value['emoji'],
       reactor: value['reactor'] as String,
@@ -173,6 +182,33 @@ class Reaction extends Equatable {
   ];
 }
 
+class ReplyMessage extends Equatable {
+  final int? messageSeq;
+  final String? replierId;
+  final DataMessage? snapshot;
+
+  ReplyMessage({
+    this.messageSeq,
+    this.replierId,
+    this.snapshot
+  });
+
+  static ReplyMessage from(Map<String, dynamic> value) {
+    return ReplyMessage(
+      messageSeq: value['message_seq'] as int,
+      replierId: value['replier_id'] as String,
+      snapshot: DataMessage.fromMessage(value['snapshot'])
+    );
+  }
+
+  @override
+  List<Object?> get props => [
+    messageSeq,
+    replierId,
+    snapshot
+  ];
+}
+
 class DataMessage extends Equatable {
   /// topic which distributed this message
   final String? topic;
@@ -181,7 +217,7 @@ class DataMessage extends Equatable {
   final String? from;
 
   /// set of string key-value pairs, passed unchanged from {pub}, optional
-  final Map<String, dynamic>? head;
+  Map<String, dynamic>? head;
 
   /// Timestamp
   final DateTime? ts;
@@ -207,6 +243,18 @@ class DataMessage extends Equatable {
     this.hi,
   });
 
+  void setHead(Map<String, dynamic> data) {
+    head = data;
+  }
+
+  int getReactionTo() {
+    final headData = head;
+    if(headData != null && headData.containsKey('reaction_to')) {
+      return headData['reaction_to'];
+    }
+    return 0;
+  }
+
   DataMessageType getType() {
     final headData = head;
     if(headData != null) {
@@ -228,10 +276,33 @@ class DataMessage extends Equatable {
 
   List<Reaction>? getReactions() {
     final headData = head;
-    if(headData != null && headData.containsKey('reactions')) {
-      final reactions = head?['reactions'];
-      final res = reactions.length > 0 ? reactions.map((dynamic reaction) => Reaction.from(reaction)).toList().cast<Reaction>() : [];
-      return res;
+    if(headData != null && headData.containsKey('reaction')) {
+      final reactions = headData['reaction'];
+      if(reactions != null) {
+        final res = <Reaction>[];
+        for (var reaction in reactions.entries) {
+          res.add(Reaction(emoji: reaction.value, reactor: reaction.key));
+        }
+        return res;
+      } else {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  String? getUrl() {
+    final extendedData = getExtendData();
+    if(extendedData != null && extendedData.containsKey('url')) {
+      return extendedData['url'];
+    }
+    return null;
+  }
+
+  double? getDuration() {
+    final extendedData = getExtendData();
+    if(extendedData != null && extendedData.containsKey('duration')) {
+      return extendedData['duration'];
     }
     return null;
   }
@@ -259,6 +330,14 @@ class DataMessage extends Equatable {
       'data': data,
       'type': type.value,
       'replace': seq //':$seq'
+    };
+  }
+
+  static Map<String, dynamic> generateReactionHead(int seq, dynamic data) {
+    return {
+      'type': 'reaction',
+      'reaction_to': seq,
+      'reaction': data
     };
   }
 
