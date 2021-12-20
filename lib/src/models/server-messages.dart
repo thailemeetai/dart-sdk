@@ -115,7 +115,7 @@ class MetaMessage {
 }
 
 enum DataMessageType {
-  text, question, sticker, reply, reaction, voice
+  text, question, sticker, reply_text, reply_sticker, reply_voice, reaction, voice
 }
 
 extension DataMessageTypeExtension on DataMessageType {
@@ -129,8 +129,12 @@ extension DataMessageTypeExtension on DataMessageType {
         return 'sticker';
       case DataMessageType.voice:
         return 'voice';
-      case DataMessageType.reply:
-        return 'reply';
+      case DataMessageType.reply_text:
+        return 'reply_text';
+      case DataMessageType.reply_sticker:
+        return 'reply_sticker';
+      case DataMessageType.reply_voice:
+        return 'reply_voice';
       case DataMessageType.reaction:
         return 'reaction';
       default:
@@ -148,8 +152,12 @@ extension DataMessageTypeExtension on DataMessageType {
         return DataMessageType.sticker;
       case 'voice':
         return DataMessageType.voice;
-      case 'reply':
-        return DataMessageType.reply;
+      case 'reply_text':
+        return DataMessageType.reply_text;
+      case 'reply_sticker':
+        return DataMessageType.reply_sticker;
+      case 'reply_voice':
+        return DataMessageType.reply_voice;
       case 'reaction':
         return DataMessageType.reaction;
       default:
