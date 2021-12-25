@@ -67,6 +67,14 @@ class SortedCache<T> {
     return buffer[at];
   }
 
+  void updateAt(int at, T element) {
+    buffer[at] = element;
+  }
+
+  List<T> toList() {
+    return buffer;
+  }
+
   /// Convenience method for getting the last element of the buffer
   T getLast() {
     return buffer.last;

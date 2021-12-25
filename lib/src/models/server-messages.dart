@@ -240,6 +240,9 @@ class DataMessage extends Equatable {
 
   int? hi;
 
+  // ToDo: workaround with a flag to force update new message list after reacting msg
+  int mark = 0;
+
   DataMessage({
     this.topic,
     this.from,
@@ -372,6 +375,7 @@ class DataMessage extends Equatable {
     content,
     noForwarding,
     hi,
+    mark
   ];
 
 }
