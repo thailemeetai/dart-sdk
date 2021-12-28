@@ -273,18 +273,26 @@ class Topic {
   /// receiving updates from the server. Unsubscribing will terminate user's relationship with the topic.
   ///
   /// Wrapper for Tinode.leave
-  Future<CtrlMessage> leave(bool unsubscribe) async {
+  Future<CtrlMessage?> leave(bool unsubscribe) async {
     if (!isSubscribed && !unsubscribe) {
       return Future.error(Exception('Cannot publish on inactive topic'));
     }
 
-    var ctrl = await _tinodeService.leave(name ?? '', unsubscribe);
+    var response = await _tinodeService.leave(name ?? '', unsubscribe);
+    print('LEAVING# ctrl = ${response.toString()}');
+    CtrlMessage? ctrl;
+    if (response is CtrlMessage) {
+      ctrl = response;
+    } else if (response is Map<String, dynamic>) {
+      ctrl = CtrlMessage.fromMessage(response);
+    }
+
     resetSubscription();
     if (unsubscribe) {
       _cacheManager.delete('topic', name ?? '');
       _gone();
     }
-    return CtrlMessage.fromMessage(ctrl);
+    return ctrl;
   }
 
   /// Request topic metadata from the serve
