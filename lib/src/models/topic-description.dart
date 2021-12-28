@@ -90,7 +90,7 @@ class TopicDescription {
       recv: msg['recv'],
       clear: msg['clear'],
       noForwarding: msg['noForwarding'],
-      touched: DateTime.tryParse(msg['touched']),
+      touched: msg['touched'] != null ? DateTime.tryParse(msg['touched']) : DateTime.now()
     );
   }
 }
