@@ -35,22 +35,22 @@ const int AccessModePermissionsBITMASK = JOIN | READ | WRITE | PRES | APPROVE | 
 /// limited to managing presence notifications and banning uses from initiating or continuing P2P conversations.
 class AccessMode {
   /// Permissions granted to user by topic's manager
-  late int _given;
+  int? _given;
 
   /// User's desired permissions
-  late int _want;
+  int? _want;
 
   /// Combination of want and given
-  late int mode;
+  int? mode;
 
   int operator [](other) {
     switch (other) {
       case 'mode':
-        return mode;
+        return mode ?? 0;
       case 'want':
-        return _want;
+        return _want ?? 0;
       case 'given':
-        return _given;
+        return _given ?? 0;
       default:
         return 0;
     }
@@ -69,8 +69,10 @@ class AccessMode {
           mode = AccessMode.decode(acs['mode']) ?? 0;
         }
       } else {
-        mode = _given & _want;
+        mode = (_given ?? 0) & (_want ?? 0);
       }
+    } else {
+      // prevent null
     }
   }
 
@@ -111,7 +113,8 @@ class AccessMode {
   }
 
   /// Decodes integer access mode to string
-  static String? encode(int val) {
+  static String? encode(int? val) {
+    if(val == null) return null;
     if (val == INVALID) {
       return null;
     } else if (val == NONE) {
@@ -130,7 +133,8 @@ class AccessMode {
   }
 
   /// Updates mode with newly given permissions
-  static int update(int val, String upd) {
+  static int update(int? val, String upd) {
+    if(val == null) return 0;
     if (!(upd is String)) {
       return val;
     }
@@ -195,10 +199,12 @@ class AccessMode {
   /// side: `mode` / `want` / `given`
   static bool checkFlag(AccessMode val, String? side, int flag) {
     side ??= 'mode';
+
     var found = ['given', 'want', 'mode'].where((s) {
       return s == side;
     }).toList();
 
+//- val[side] = ${(val[side] != null)}
     if (found.isNotEmpty) {
       return ((val[side] & flag) != 0);
     }
@@ -252,12 +258,12 @@ class AccessMode {
 
   /// What user `want` that is not `given`
   String? getMissing() {
-    return AccessMode.encode(_want & ~_given);
+    return AccessMode.encode((_want ?? 0) & ~(_given ?? 0));
   }
 
   /// What permission is `given` and user does not `want`
   String? getExcessive() {
-    return AccessMode.encode(_given & ~_want);
+    return AccessMode.encode((_given ?? 0) & ~(_want ?? 0));
   }
 
   AccessMode updateAll(AccessMode? val) {
@@ -271,7 +277,7 @@ class AccessMode {
       if (w != null) {
         updateWant(w);
       }
-      mode = _given & _want;
+      mode = (_given ?? 0) & (_want ?? 0);
     }
     return this;
   }

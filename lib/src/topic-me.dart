@@ -394,8 +394,19 @@ class TopicMe extends Topic {
       }
       cont.unread = (cont.seq ?? 0) - (cont.read ?? 0);
 
-      if (doUpdate && (cont.acs == null || !cont.acs!.isMuted(null))) {
-        onContactUpdate.add(ContactUpdateEvent(what, cont));
+      // if (doUpdate && (cont.acs == null || !cont.acs!.isMuted(null))) {
+      //   onContactUpdate.add(ContactUpdateEvent(what, cont));
+      // }
+
+      if (doUpdate) {
+        var acs = cont.acs;
+        if(acs == null) {
+          onContactUpdate.add(ContactUpdateEvent(what, cont));
+        } else {
+          if(!acs.isMuted(null)) {
+            onContactUpdate.add(ContactUpdateEvent(what, cont));
+          }
+        }
       }
     }
   }

@@ -329,17 +329,17 @@ class DataMessage extends Equatable {
     return null;
   }
 
-  static Map<String, dynamic> generateHead(DataMessageType type, dynamic data) {
+  static Map<String, dynamic> generateHead(String type, dynamic data) {
     return {
       'data': data,
-      'type': type.value
+      'type': type
     };
   }
 
-  static Map<String, dynamic> generateUpdateHead(DataMessageType type, dynamic data, String seq) {
+  static Map<String, dynamic> generateUpdateHead(String type, dynamic data, String seq) {
     return {
       'data': data,
-      'type': type.value,
+      'type': type,
       'replace': seq //':$seq'
     };
   }
