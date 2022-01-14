@@ -355,7 +355,7 @@ class DataMessage extends Equatable {
   static DataMessage fromMessage(Map<String, dynamic> msg) {
     return DataMessage(
       topic: msg['topic'],
-      from: msg['from'],
+      from: msg['from'] ?? msg['replyMessage'],
       head: msg['head'],
       ts: msg['ts'],
       seq: msg['seq'],
