@@ -660,7 +660,8 @@ class Topic {
   /// Check if the given seq Id is id of the most recent message
   /// seqId id of the message to check
   bool isNewMessage(seqId) {
-    return _maxSeq <= seqId;
+    // return _maxSeq <= seqId;
+    return _maxSeq < seqId;
   }
 
   DataMessage? flushMessage(int seqId) {
@@ -1070,8 +1071,6 @@ class Topic {
 
       // Found a new gap.
       final hi = data.hi ?? 0;
-      print('ThaiDebug::Topic: hi = ${(data?.hi ?? "null")} - seq = ${data.seq}');
-
       if (prev.hi != null && prev.hi != 0) {
         // Previous is also a gap, alter it.
         prev.hi = hi > 0 ? hi : data.seq;
