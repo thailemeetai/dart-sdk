@@ -1085,10 +1085,11 @@ class Topic {
       ranges.add(prev);
     }, null, null);
 
+    var seq = this.seq != null ? this.seq!: 0;
     // Check for missing messages at the end.
     // All messages could be missing or it could be a new topic with no messages.
     var last = _messages.length > 0 ? _messages.getLast() : null;
-    var maxSeq = max(seq!, _maxSeq);
+    var maxSeq = max(seq, _maxSeq);
     if ((maxSeq > 0 && last == null) || (last != null && (((last.hi != null && last.hi! > 0) ? last.hi : last.seq)! < maxSeq))) {
       if (last != null && (last.hi != null && last.hi! > 0)) {
         // Extend existing gap
