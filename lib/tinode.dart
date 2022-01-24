@@ -256,6 +256,13 @@ class Tinode {
     return _authService.isAuthenticated;
   }
 
+  void logout() {
+    // clear authentication
+    _authService.reset();
+    // clear cache & close connect
+    disconnect();
+  }
+
   /// Current user token
   AuthToken? get token {
     return _authService.authToken;
@@ -263,7 +270,7 @@ class Tinode {
 
   /// Current user id
   String get userId {
-    return _authService.userId!;
+    return _authService.userId ?? '';
   }
 
   /// Say hello and set some initial configuration like:
@@ -336,9 +343,11 @@ class Tinode {
   }
 
   Future<CtrlMessage> loginWithAccessToken(String accessToken) async {
+    print('TinodeService#isAuthenticated# loginWithAccessToken: $accessToken');
+
     var secret = base64.encode(utf8.encode(accessToken));
     var ctrl = await login('basic', secret, null);
-    print('Tinode::origin::User Id: ' + ctrl.toString());
+    print('TinodeService#isAuthenticated# loginWithAccessToken# User Id: ' + ctrl.toString());
 
     _authService.setLastLogin(accessToken);
     return ctrl;

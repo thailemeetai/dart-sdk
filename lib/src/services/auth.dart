@@ -39,6 +39,14 @@ class AuthService {
     _userId = userId;
   }
 
+  void reset() {
+    _userId = '';
+    _lastLogin = '';
+    _authToken = null;
+    _authenticated = false;
+    print('TinodeService#isAuthenticated#AuthService# reset user_id: $_userId');
+  }
+
   void onLoginSuccessful(CtrlMessage? ctrl) {
     if (ctrl == null) {
       return;

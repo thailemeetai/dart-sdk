@@ -17,7 +17,7 @@ class ConnectionService {
   final ConnectionOptions _options;
 
   /// Websocket wrapper channel based on `dart:io`
-  late IOWebSocketChannel _channel;
+  IOWebSocketChannel? _channel;
 
   /// Websocket connection
   WebSocket? _ws;
@@ -56,7 +56,7 @@ class ConnectionService {
     _loggerService.log('Connected.');
     _channel = IOWebSocketChannel(_ws!);
     onOpen.add('Opened');
-    _channel.stream.listen((message) {
+    _channel?.stream.listen((message) {
       onMessage.add(message);
     });
   }
@@ -66,12 +66,13 @@ class ConnectionService {
     if (!isConnected || _connecting) {
       throw Exception('Tried sending data but you are not connected yet.');
     }
-    _channel.sink.add(str);
+    _channel?.sink.add(str);
   }
 
   /// Close current websocket connection
   void disconnect() {
-    _channel = null as IOWebSocketChannel;
+    // _channel = null as IOWebSocketChannel;
+    _channel = null;
     _connecting = false;
     _ws?.close(status.goingAway);
     onDisconnect.add(null);
