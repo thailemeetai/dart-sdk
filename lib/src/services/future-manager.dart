@@ -42,13 +42,13 @@ class FutureManager {
     var expires = DateTime.now().subtract(Duration(milliseconds: _configService.appSettings.expireFuturesTimeout));
 
     var markForRemoval = <String>[];
-    // _pendingFutures.forEach((String key, FutureCallback featureCB) {
-    //   if (featureCB.ts!.isBefore(expires)) {
-    //     _loggerService.error('Promise expired ' + key.toString());
-    //     featureCB.completer?.completeError(exception);
-    //     markForRemoval.add(key);
-    //   }
-    // });
+    _pendingFutures.forEach((String key, FutureCallback featureCB) {
+      if (featureCB.ts!.isBefore(expires)) {
+        _loggerService.error('Promise expired ' + key.toString());
+        featureCB.completer?.completeError(exception);
+        markForRemoval.add(key);
+      }
+    });
 
     _pendingFutures.removeWhere((key, value) => markForRemoval.contains(key));
   }
