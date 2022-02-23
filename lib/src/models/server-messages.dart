@@ -115,7 +115,8 @@ class MetaMessage {
 }
 
 enum DataMessageType {
-  text, question, sticker, reply_text, reply_sticker, reply_voice, reaction, voice, fun_question
+  text, question, sticker, reply_text, reply_sticker, reply_voice, reaction, voice, fun_question,
+  photo
 }
 
 extension DataMessageTypeExtension on DataMessageType {
@@ -139,6 +140,8 @@ extension DataMessageTypeExtension on DataMessageType {
         return 'reaction';
       case DataMessageType.fun_question:
         return 'fun_question';
+      case DataMessageType.photo:
+        return 'photo';
       default:
         return '';
     }
@@ -164,6 +167,8 @@ extension DataMessageTypeExtension on DataMessageType {
         return DataMessageType.reaction;
       case 'fun_question':
         return DataMessageType.fun_question;
+      case 'photo':
+        return DataMessageType.photo;
       default:
         return DataMessageType.text;
     }
