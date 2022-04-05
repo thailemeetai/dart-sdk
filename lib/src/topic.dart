@@ -992,6 +992,8 @@ class Topic {
   /// Reset subscribed state
   void resetSubscription() {
     _subscribed = false;
+    _maxSeq = 0;
+    _minSeq = 0;
   }
 
   /// This topic is either deleted or unsubscribed from
