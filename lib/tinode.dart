@@ -230,10 +230,10 @@ class Tinode {
   }
 
   /// Open the connection and send a hello packet to server
-  Future connect() async {
+  Future connect({String? deviceToken}) async {
     _doSubscriptions();
     await _connectionService.connect();
-    return hello();
+    return hello(deviceToken: deviceToken);
   }
 
   /// Close the current connection
