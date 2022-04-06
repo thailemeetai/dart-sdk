@@ -338,8 +338,12 @@ class DataMessage extends Equatable {
     return null;
   }
 
-  static Map<String, dynamic> generateHead(String type, dynamic data) {
-    return {
+  static Map<String, dynamic> generateHead(String type, dynamic data, {String? senderName}) {
+    return senderName != null? {
+      'data': data,
+      'type': type,
+      'sender_name': senderName
+    }: {
       'data': data,
       'type': type
     };
