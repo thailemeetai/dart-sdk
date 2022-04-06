@@ -47,9 +47,9 @@ class FutureManager {
     var markForRemoval = <String>[];
     _pendingFutures.forEach((String key, FutureCallback featureCB) {
       if (featureCB.ts!.isBefore(expires)) {
+        markForRemoval.add(key);
         _loggerService.error('Promise expired ' + key.toString());
         featureCB.completer?.completeError(exception);
-        markForRemoval.add(key);
       }
     });
 
