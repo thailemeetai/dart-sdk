@@ -55,6 +55,7 @@ export 'package:tinode/src/sorted-cache.dart';
 export 'package:tinode/src/topic-fnd.dart';
 export 'package:tinode/src/topic-me.dart';
 export 'package:tinode/src/topic.dart';
+export 'package:tinode/src/models/message.dart';
 
 /// Provides a simple interface to interact with tinode server using websocket
 class Tinode {
@@ -300,12 +301,14 @@ class Tinode {
   /// Create or update an account
   ///
   /// * Scheme can be `basic` or `token` or `reset`
-  Future account(String userId, String scheme, String secret, bool login, AccountParams? params) {
+  Future account(String userId, String scheme, String secret, bool login,
+      AccountParams? params) {
     return _tinodeService.account(userId, scheme, secret, login, params);
   }
 
   /// Create a new user. Wrapper for `account` method
-  Future createAccount(String scheme, String secret, bool login, AccountParams? params) {
+  Future createAccount(
+      String scheme, String secret, bool login, AccountParams? params) {
     var promise = account(topic_names.USER_NEW, scheme, secret, login, params);
     if (login) {
       promise = promise.then((dynamic ctrl) {
@@ -318,24 +321,28 @@ class Tinode {
 
   /// Create user with 'basic' authentication scheme and immediately
   /// use it for authentication. Wrapper for `createAccount`
-  Future createAccountBasic(String username, String password, bool login, AccountParams? params) {
+  Future createAccountBasic(
+      String username, String password, bool login, AccountParams? params) {
     var secret = base64.encode(utf8.encode(username + ':' + password));
     return createAccount('basic', secret, login, params);
   }
 
   /// Update account with basic
-  Future updateAccountBasic(String userId, String username, String password, AccountParams? params) {
+  Future updateAccountBasic(
+      String userId, String username, String password, AccountParams? params) {
     var secret = base64.encode(utf8.encode(username + ':' + password));
     return account(userId, 'basic', secret, false, params);
   }
 
   /// Authenticate current session
-  Future<CtrlMessage> login(String scheme, String secret, Map<String, dynamic>? cred) {
+  Future<CtrlMessage> login(
+      String scheme, String secret, Map<String, dynamic>? cred) {
     return _tinodeService.login(scheme, secret, cred);
   }
 
   /// Wrapper for `login` with basic authentication
-  Future<CtrlMessage> loginBasic(String username, String password, Map<String, dynamic>? cred) async {
+  Future<CtrlMessage> loginBasic(
+      String username, String password, Map<String, dynamic>? cred) async {
     var secret = base64.encode(utf8.encode(username + ':' + password));
     var ctrl = await login('basic', secret, cred);
     _authService.setLastLogin(username);
@@ -347,7 +354,8 @@ class Tinode {
 
     var secret = base64.encode(utf8.encode(accessToken));
     var ctrl = await login('basic', secret, null);
-    print('TinodeService#isAuthenticated# loginWithAccessToken# User Id: ' + ctrl.toString());
+    print('TinodeService#isAuthenticated# loginWithAccessToken# User Id: ' +
+        ctrl.toString());
 
     _authService.setLastLogin(accessToken);
     return ctrl;
@@ -363,7 +371,8 @@ class Tinode {
   /// * method - method to use for resetting the secret, such as "email" or "tel"
   /// * value - value of the credential to use, a specific email address or a phone number
   Future requestResetSecret(String scheme, String method, String value) {
-    var secret = base64.encode(utf8.encode(scheme + ':' + method + ':' + value));
+    var secret =
+        base64.encode(utf8.encode(scheme + ':' + method + ':' + value));
     return login('reset', secret, null);
   }
 
