@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:get_it/get_it.dart';
 
@@ -37,9 +38,6 @@ class TinodeService {
   /// Future manager, responsible for making futures and executing them
   late FutureManager _futureManager;
 
-  /// Logger service, responsible for logging content in different levels
-  late LoggerService _loggerService;
-
   /// Configuration service, responsible for storing library config and information
   late ConfigService _configService;
 
@@ -69,13 +67,13 @@ class TinodeService {
     _connectionService = GetIt.I.get<ConnectionService>();
     _packetGenerator = GetIt.I.get<PacketGenerator>();
     _futureManager = GetIt.I.get<FutureManager>();
-    _loggerService = GetIt.I.get<LoggerService>();
     _configService = GetIt.I.get<ConfigService>();
     _cacheManager = GetIt.I.get<CacheManager>();
     _authService = GetIt.I.get<AuthService>();
   }
 
   FutureManager get futureManager => _futureManager;
+  final _logger = Logger();
 
   /// Process a packet if the packet type is `ctrl`
   void handleCtrlMessage(CtrlMessage? ctrl) {
@@ -87,6 +85,8 @@ class TinodeService {
 
     var code = ctrl.code;
     if (ctrl.id != null && ctrl.id != '' && code != null) {
+      _logger.i(
+          'Tinode - handleCtrlMessage - ctrl id: ${ctrl.id}, text: ${ctrl.text}, code: $code');
       _futureManager.execFuture(ctrl.id, code, ctrl, ctrl.text);
     }
 
@@ -127,6 +127,7 @@ class TinodeService {
     }
 
     if (meta.id != null) {
+      _logger.i('Tinode - handleMetaMessage - meta: $meta');
       _futureManager.execFuture(meta.id, 200, meta, 'META');
     }
   }
@@ -176,9 +177,10 @@ class TinodeService {
   /// Sends a packet using connection service
   Future<dynamic> _send(Packet pkt) {
     var future = Future<dynamic>.value(null);
-
     if (pkt.id != null) {
       future = _futureManager.makeFuture(pkt.id ?? '');
+      _logger.i(
+          'Tinode - _send - _futureManager.makeFuture for id: ${pkt.id ?? ''}');
     }
     var formattedPkt = pkt.toMap();
     formattedPkt['id'] = pkt.id;
@@ -191,18 +193,20 @@ class TinodeService {
 
     var json = jsonEncode({pkt.name: formattedPkt});
     try {
+      _logger
+          .i('Tinode - _send -  _connectionService.sendText with json: $json');
       _connectionService.sendText(json);
-      _loggerService.log('out: ' + json);
     } catch (e) {
       if (pkt.id != null) {
-        _loggerService.error(e.toString());
+        _logger.e(
+            'Tinode - _send - with exception: $e, _futureManager.execFuture pkt.id: ${pkt.id}, network error: ${_configService.appSettings.networkError}');
         _futureManager.execFuture(
             pkt.id, _configService.appSettings.networkError, null, 'Error');
       } else {
+        _logger.e('Tinode - _send - with exception: $e rethrow');
         rethrow;
       }
     }
-
     return future;
   }
 

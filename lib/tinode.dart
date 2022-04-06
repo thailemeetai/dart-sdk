@@ -3,6 +3,7 @@ library tinode;
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:get_it/get_it.dart';
 
@@ -120,6 +121,7 @@ class Tinode {
   }
 
   FutureManager get futureManager => _futureManager;
+  final _logger = Logger();
 
   /// Register services in dependency injection container
   void _registerDependencies(ConnectionOptions options, bool loggerEnabled) {
@@ -155,6 +157,8 @@ class Tinode {
     });
 
     _onConnectedSubscription ??= _connectionService.onOpen.listen((_) {
+      _logger.i(
+          'Tinode - _doSubscriptions - _onConnectedSubscription - _futureManager.checkExpiredFutures');
       _futureManager.checkExpiredFutures();
       onConnected.add(null);
     });
@@ -170,12 +174,16 @@ class Tinode {
   void _unsubscribeAll() {
     _onMessageSubscription?.cancel();
     _onConnectedSubscription?.cancel();
+    _logger.i(
+        'Tinode - _unsubscribeAll - _futureManager.stopCheckingExpiredFutures');
     _futureManager.stopCheckingExpiredFutures();
   }
 
   /// Unsubscribe and reset local variables when connection closes
   void _onConnectionDisconnect() {
     _unsubscribeAll();
+    _logger.i(
+        'Tinode - _doSubscriptions - _onConnectionDisconnect - rejectAllFutures');
     _futureManager.rejectAllFutures(0, 'disconnect');
     _cacheManager.map((String key, dynamic value) {
       if (key.contains('topic:')) {
