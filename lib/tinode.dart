@@ -119,6 +119,8 @@ class Tinode {
     _doSubscriptions();
   }
 
+  FutureManager get futureManager => _futureManager;
+
   /// Register services in dependency injection container
   void _registerDependencies(ConnectionOptions options, bool loggerEnabled) {
     var registered = GetIt.I.isRegistered<ConfigService>();
