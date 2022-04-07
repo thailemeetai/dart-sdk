@@ -171,9 +171,11 @@ class Tinode {
   }
 
   /// Unsubscribe every subscription to prevent memory leak
-  void _unsubscribeAll() {
+  void unsubscribeAll() {
     _onMessageSubscription?.cancel();
+    _onMessageSubscription = null;
     _onConnectedSubscription?.cancel();
+    _onConnectedSubscription = null;
     _logger.i(
         'Tinode - _unsubscribeAll - _futureManager.stopCheckingExpiredFutures');
     _futureManager.stopCheckingExpiredFutures();
@@ -181,7 +183,7 @@ class Tinode {
 
   /// Unsubscribe and reset local variables when connection closes
   void _onConnectionDisconnect() {
-    _unsubscribeAll();
+    unsubscribeAll();
     _logger.i(
         'Tinode - _doSubscriptions - _onConnectionDisconnect - rejectAllFutures');
     _futureManager.rejectAllFutures(0, 'disconnect');
@@ -197,6 +199,7 @@ class Tinode {
 
   /// Handler for newly received messages from server
   void _onConnectionMessage(String? input) {
+    _logger.i('_onConnectionMessage - input: $input');
     if (input == null || input == '') {
       return;
     }
@@ -207,12 +210,18 @@ class Tinode {
 
     if (input == '0') {
       onNetworkProbe.add(null);
+      _logger.e('_onConnectionMessage - input: = 0, return');
       return;
     }
-
-    var pkt = jsonDecode(input, reviver: Tools.jsonParserHelper);
-    if (pkt == null) {
-      _loggerService.error('failed to parse data');
+    var pkt;
+    try {
+      pkt = jsonDecode(input, reviver: Tools.jsonParserHelper);
+      if (pkt == null) {
+        _logger.e('_onConnectionMessage - pkt: = null, return');
+        return;
+      }
+    } catch (error) {
+      _logger.e('_onConnectionMessage - with error: $error');
       return;
     }
 
@@ -223,14 +232,24 @@ class Tinode {
     onMessage.add(message);
 
     if (message.ctrl != null) {
+      _logger.i(
+          '_onConnectionMessage - handleCtrlMessage - ctrl id: ${message.ctrl?.id}');
       _tinodeService.handleCtrlMessage(message.ctrl);
     } else if (message.meta != null) {
+      _logger.i(
+          '_onConnectionMessage - handleMetaMessage - meta id: ${message.meta?.id}');
       _tinodeService.handleMetaMessage(message.meta);
     } else if (message.data != null) {
+      _logger.i(
+          '_onConnectionMessage - handleDataMessage - data: ${message.data}');
       _tinodeService.handleDataMessage(message.data);
     } else if (message.pres != null) {
+      _logger.i(
+          '_onConnectionMessage - handlePresMessage - pres: ${message.pres}');
       _tinodeService.handlePresMessage(message.pres);
     } else if (message.info != null) {
+      _logger.i(
+          '_onConnectionMessage - handleInfoMessage - info: ${message.info}');
       _tinodeService.handleInfoMessage(message.info);
     }
   }
