@@ -2,6 +2,7 @@ library tinode;
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:html';
 
 import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
@@ -112,8 +113,23 @@ class Tinode {
   /// `options` connection configuration and api key
   ///
   /// `loggerEnabled` pass `true` if you want to turn the logger on
-  Tinode(String appName, ConnectionOptions options, bool loggerEnabled) {
-    _registerDependencies(options, loggerEnabled);
+  Tinode(
+    String appName,
+    ConnectionOptions options,
+    bool loggerEnabled, {
+    required String appVersion,
+    required String humanLangauge,
+    int? futuresPeriod,
+    int? expireFuturesTimeout,
+  }) {
+    _registerDependencies(
+      options,
+      loggerEnabled,
+      appVersion: appVersion,
+      humanLangauge: humanLangauge,
+      futuresPeriod: futuresPeriod,
+      expireFuturesTimeout: expireFuturesTimeout,
+    );
     _resolveDependencies();
 
     _configService.appName = appName;
@@ -124,11 +140,24 @@ class Tinode {
   final _logger = Logger();
 
   /// Register services in dependency injection container
-  void _registerDependencies(ConnectionOptions options, bool loggerEnabled) {
+  void _registerDependencies(
+    ConnectionOptions options,
+    bool loggerEnabled, {
+    required String appVersion,
+    required String humanLangauge,
+    int? futuresPeriod,
+    int? expireFuturesTimeout,
+  }) {
     var registered = GetIt.I.isRegistered<ConfigService>();
 
     if (!registered) {
-      GetIt.I.registerSingleton<ConfigService>(ConfigService(loggerEnabled));
+      GetIt.I.registerSingleton<ConfigService>(ConfigService(
+        loggerEnabled,
+        appVersion: appVersion,
+        humanLanguage: humanLangauge,
+        futuresPeriod: futuresPeriod,
+        expireFuturesTimeout: expireFuturesTimeout,
+      ));
       GetIt.I.registerSingleton<LoggerService>(LoggerService());
       GetIt.I.registerSingleton<AuthService>(AuthService());
       GetIt.I.registerSingleton<ConnectionService>(ConnectionService(options));
