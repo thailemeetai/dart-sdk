@@ -13,15 +13,15 @@ class ConfigService {
   String appName = '';
 
   ConfigService(bool loggerEnabled,
-      {required String appVersion,
-      required String humanLanguage,
+      {required String versionApp,
+      required String deviceLocale,
       int? futuresPeriod,
       int? expireFuturesTimeout}) {
     _appSettings = AppSettings(
         0xFFFFFFF, 503, futuresPeriod ?? 1000, expireFuturesTimeout ?? 5000);
     deviceToken = null;
-    appVersion = appVersion;
-    humanLanguage = humanLanguage;
+    appVersion = versionApp;
+    humanLanguage = deviceLocale;
     this.loggerEnabled = loggerEnabled;
   }
 

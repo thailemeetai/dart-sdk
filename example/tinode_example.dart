@@ -7,7 +7,7 @@ void main(List<String> args) async {
   var loggerEnabled = true;
   var tinode = Tinode(
       'Moein', ConnectionOptions(host, key, secure: true), loggerEnabled,
-      appVersion: '1.0.1', humanLangauge: 'en');
+      versionApp: '1.0.1', deviceLocale: 'en');
   await tinode.connect();
   print('Is Connected:' + tinode.isConnected.toString());
   var result = await tinode.loginBasic('alice', 'alice123', null);

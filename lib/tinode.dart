@@ -116,16 +116,16 @@ class Tinode {
     String appName,
     ConnectionOptions options,
     bool loggerEnabled, {
-    required String appVersion,
-    required String humanLangauge,
+    required String versionApp,
+    required String deviceLocale,
     int? futuresPeriod,
     int? expireFuturesTimeout,
   }) {
     _registerDependencies(
       options,
       loggerEnabled,
-      appVersion: appVersion,
-      humanLangauge: humanLangauge,
+      versionApp: versionApp,
+      deviceLocale: deviceLocale,
       futuresPeriod: futuresPeriod,
       expireFuturesTimeout: expireFuturesTimeout,
     );
@@ -142,8 +142,8 @@ class Tinode {
   void _registerDependencies(
     ConnectionOptions options,
     bool loggerEnabled, {
-    required String appVersion,
-    required String humanLangauge,
+    required String versionApp,
+    required String deviceLocale,
     int? futuresPeriod,
     int? expireFuturesTimeout,
   }) {
@@ -152,8 +152,8 @@ class Tinode {
     if (!registered) {
       GetIt.I.registerSingleton<ConfigService>(ConfigService(
         loggerEnabled,
-        appVersion: appVersion,
-        humanLanguage: humanLangauge,
+        versionApp: versionApp,
+        deviceLocale: deviceLocale,
         futuresPeriod: futuresPeriod,
         expireFuturesTimeout: expireFuturesTimeout,
       ));
