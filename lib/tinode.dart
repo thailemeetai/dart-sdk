@@ -2,7 +2,6 @@ library tinode;
 
 import 'dart:async';
 import 'dart:convert';
-import 'dart:html';
 
 import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
