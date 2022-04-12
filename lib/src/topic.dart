@@ -295,6 +295,26 @@ class Topic {
     return ctrl;
   }
 
+  Future<CtrlMessage?> leaveWithCleanCache() async {
+    if (!isSubscribed) {
+      return Future.error(Exception('Cannot publish on inactive topic'));
+    }
+
+    var response = await _tinodeService.leave(name ?? '', false);
+    print('LEAVING_CLEAN_CACHE# ctrl = ${response.toString()}');
+    CtrlMessage? ctrl;
+    if (response is CtrlMessage) {
+      ctrl = response;
+    } else if (response is Map<String, dynamic>) {
+      ctrl = CtrlMessage.fromMessage(response);
+    }
+
+    resetSubscription();
+    _cacheManager.delete('topic', name ?? '');
+    _gone();
+    return ctrl;
+  }
+
   /// Request topic metadata from the serve
   Future getMeta(GetQuery params) {
     // Send {get} message, return promise.
