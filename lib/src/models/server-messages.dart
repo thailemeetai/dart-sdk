@@ -94,7 +94,15 @@ class MetaMessage {
   /// Latest applicable 'delete' transaction
   final DeleteTransaction? del;
 
-  MetaMessage({this.id, this.topic, this.ts, this.desc, this.sub, this.tags, this.cred, this.del});
+  MetaMessage(
+      {this.id,
+      this.topic,
+      this.ts,
+      this.desc,
+      this.sub,
+      this.tags,
+      this.cred,
+      this.del});
 
   static MetaMessage fromMessage(Map<String, dynamic> msg) {
     List<dynamic>? sub = msg['sub'];
@@ -103,19 +111,35 @@ class MetaMessage {
       id: msg['id'],
       topic: msg['topic'],
       ts: msg['ts'],
-      desc: msg['desc'] != null ? TopicDescription.fromMessage(msg['desc']) : null,
-      sub: sub != null && sub.length != null ? sub.map((sub) => TopicSubscription.fromMessage(sub)).toList() : [],
+      desc: msg['desc'] != null
+          ? TopicDescription.fromMessage(msg['desc'])
+          : null,
+      sub: sub != null && sub.length != null
+          ? sub.map((sub) => TopicSubscription.fromMessage(sub)).toList()
+          : [],
       tags: msg['tags']?.cast<String>(),
       cred: msg['cred'] != null && msg['cred'].length > 0
-          ? msg['cred'].map((dynamic cred) => Credential.fromMessage(cred)).toList().cast<Credential>()
+          ? msg['cred']
+              .map((dynamic cred) => Credential.fromMessage(cred))
+              .toList()
+              .cast<Credential>()
           : [],
-      del: msg['del'] != null ? DeleteTransaction.fromMessage(msg['del']) : null,
+      del:
+          msg['del'] != null ? DeleteTransaction.fromMessage(msg['del']) : null,
     );
   }
 }
 
 enum DataMessageType {
-  text, question, sticker, reply_text, reply_sticker, reply_voice, reaction, voice, fun_question,
+  text,
+  question,
+  sticker,
+  reply_text,
+  reply_sticker,
+  reply_voice,
+  reaction,
+  voice,
+  fun_question,
   photo
 }
 
@@ -179,10 +203,7 @@ class Reaction extends Equatable {
   final String? emoji;
   final String? reactor;
 
-  Reaction({
-    this.emoji,
-    this.reactor
-  });
+  Reaction({this.emoji, this.reactor});
 
   static Reaction from(Map<String, dynamic> value) {
     print("Reaction::from # $value");
@@ -193,10 +214,7 @@ class Reaction extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-    emoji,
-    reactor
-  ];
+  List<Object?> get props => [emoji, reactor];
 }
 
 class ReplyMessage extends Equatable {
@@ -204,26 +222,17 @@ class ReplyMessage extends Equatable {
   final String? replierId;
   final DataMessage? snapshot;
 
-  ReplyMessage({
-    this.messageSeq,
-    this.replierId,
-    this.snapshot
-  });
+  ReplyMessage({this.messageSeq, this.replierId, this.snapshot});
 
   static ReplyMessage from(Map<String, dynamic> value) {
     return ReplyMessage(
-      messageSeq: value['message_seq'] as int,
-      replierId: value['replier_id'] as String,
-      snapshot: DataMessage.fromMessage(value['snapshot'])
-    );
+        messageSeq: value['message_seq'] as int,
+        replierId: value['replier_id'] as String,
+        snapshot: DataMessage.fromMessage(value['snapshot']));
   }
 
   @override
-  List<Object?> get props => [
-    messageSeq,
-    replierId,
-    snapshot
-  ];
+  List<Object?> get props => [messageSeq, replierId, snapshot];
 }
 
 class DataMessage extends Equatable {
@@ -269,7 +278,7 @@ class DataMessage extends Equatable {
 
   int getReactionTo() {
     final headData = head;
-    if(headData != null && headData.containsKey('reaction_to')) {
+    if (headData != null && headData.containsKey('reaction_to')) {
       return headData['reaction_to'];
     }
     return 0;
@@ -277,8 +286,8 @@ class DataMessage extends Equatable {
 
   DataMessageType getType() {
     final headData = head;
-    if(headData != null) {
-      if(headData.containsKey('type')) {
+    if (headData != null) {
+      if (headData.containsKey('type')) {
         final type = headData['type'];
         return DataMessageTypeExtension.from(type);
       }
@@ -288,7 +297,7 @@ class DataMessage extends Equatable {
   }
 
   Map<String, dynamic>? getExtendData() {
-    if(getType() != DataMessageType.text) {
+    if (getType() != DataMessageType.text) {
       return head?['data'];
     }
     return null;
@@ -296,9 +305,9 @@ class DataMessage extends Equatable {
 
   List<Reaction>? getReactions() {
     final headData = head;
-    if(headData != null && headData.containsKey('reaction')) {
+    if (headData != null && headData.containsKey('reaction')) {
       final reactions = headData['reaction'];
-      if(reactions != null) {
+      if (reactions != null) {
         final res = <Reaction>[];
         for (var reaction in reactions.entries) {
           res.add(Reaction(emoji: reaction.value, reactor: reaction.key));
@@ -313,7 +322,7 @@ class DataMessage extends Equatable {
 
   String? getUrl() {
     final extendedData = getExtendData();
-    if(extendedData != null && extendedData.containsKey('url')) {
+    if (extendedData != null && extendedData.containsKey('url')) {
       return extendedData['url'];
     }
     return null;
@@ -321,7 +330,7 @@ class DataMessage extends Equatable {
 
   double? getDuration() {
     final extendedData = getExtendData();
-    if(extendedData != null && extendedData.containsKey('duration')) {
+    if (extendedData != null && extendedData.containsKey('duration')) {
       return extendedData['duration'];
     }
     return null;
@@ -329,8 +338,8 @@ class DataMessage extends Equatable {
 
   String? getReplace() {
     final headData = head;
-    if(headData != null) {
-      if(headData.containsKey('replace')) {
+    if (headData != null) {
+      if (headData.containsKey('replace')) {
         return headData['replace'];
       }
       return null;
@@ -338,18 +347,24 @@ class DataMessage extends Equatable {
     return null;
   }
 
-  static Map<String, dynamic> generateHead(String type, dynamic data, {String? senderName}) {
-    return senderName != null? {
-      'data': data,
-      'type': type,
-      'sender_name': senderName
-    }: {
-      'data': data,
-      'type': type
-    };
+  static Map<String, dynamic> generateHead(String type, dynamic data,
+      {String? senderName, required String roomId}) {
+    return senderName != null
+        ? {
+            'data': data,
+            'type': type,
+            'room_id': roomId,
+            'sender_name': senderName
+          }
+        : {
+            'data': data,
+            'type': type,
+            'room_id': roomId,
+          };
   }
 
-  static Map<String, dynamic> generateUpdateHead(String type, dynamic data, String seq) {
+  static Map<String, dynamic> generateUpdateHead(
+      String type, dynamic data, String seq) {
     return {
       'data': data,
       'type': type,
@@ -358,11 +373,7 @@ class DataMessage extends Equatable {
   }
 
   static Map<String, dynamic> generateReactionHead(int seq, dynamic data) {
-    return {
-      'type': 'reaction',
-      'reaction_to': seq,
-      'reaction': data
-    };
+    return {'type': 'reaction', 'reaction_to': seq, 'reaction': data};
   }
 
   static DataMessage fromMessage(Map<String, dynamic> msg) {
@@ -379,18 +390,8 @@ class DataMessage extends Equatable {
   }
 
   @override
-  List<Object?> get props => [
-    topic,
-    from,
-    head,
-    ts,
-    seq,
-    content,
-    noForwarding,
-    hi,
-    mark
-  ];
-
+  List<Object?> get props =>
+      [topic, from, head, ts, seq, content, noForwarding, hi, mark];
 }
 
 class PresMessage {
@@ -447,8 +448,11 @@ class PresMessage {
       what: msg['what'],
       seq: msg['seq'],
       clear: msg['clear'],
-      delseq:
-          msg['delseq'] != null && msg['delseq'].length != null ? msg['delseq'].map((seq) => DeleteTransactionRange.fromMessage(seq)).toList() : [],
+      delseq: msg['delseq'] != null && msg['delseq'].length != null
+          ? msg['delseq']
+              .map((seq) => DeleteTransactionRange.fromMessage(seq))
+              .toList()
+          : [],
       ua: msg['ua'],
       act: msg['act'],
       tgt: msg['tgt'],
