@@ -85,8 +85,6 @@ class TinodeService {
 
     var code = ctrl.code;
     if (ctrl.id != null && ctrl.id != '' && code != null) {
-      _logger.i(
-          'Tinode - handleCtrlMessage - ctrl id: ${ctrl.id}, text: ${ctrl.text}, code: $code');
       _futureManager.execFuture(ctrl.id, code, ctrl, ctrl.text);
     }
 
@@ -127,7 +125,6 @@ class TinodeService {
     }
 
     if (meta.id != null) {
-      _logger.i('Tinode - handleMetaMessage - meta: $meta');
       _futureManager.execFuture(meta.id, 200, meta, 'META');
     }
   }
@@ -179,8 +176,6 @@ class TinodeService {
     var future = Future<dynamic>.value(null);
     if (pkt.id != null) {
       future = _futureManager.makeFuture(pkt.id ?? '');
-      _logger.i(
-          'Tinode - _send - _futureManager.makeFuture for id: ${pkt.id ?? ''}');
     }
     var formattedPkt = pkt.toMap();
     formattedPkt['id'] = pkt.id;
@@ -193,17 +188,12 @@ class TinodeService {
 
     var json = jsonEncode({pkt.name: formattedPkt});
     try {
-      _logger
-          .i('Tinode - _send -  _connectionService.sendText with json: $json');
       _connectionService.sendText(json);
     } catch (e) {
       if (pkt.id != null) {
-        _logger.e(
-            'Tinode - _send - with exception: $e, _futureManager.execFuture pkt.id: ${pkt.id}, network error: ${_configService.appSettings.networkError}');
         _futureManager.execFuture(
             pkt.id, _configService.appSettings.networkError, null, 'Error');
       } else {
-        _logger.e('Tinode - _send - with exception: $e rethrow');
         rethrow;
       }
     }

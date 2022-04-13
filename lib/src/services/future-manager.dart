@@ -20,8 +20,6 @@ class FutureManager {
     if (id.isNotEmpty) {
       _pendingFutures[id] =
           FutureCallback(completer: completer, ts: DateTime.now());
-      _logger.i(
-          'FutureManager - makeFuture - _pendingFutures[$id] value: ${_pendingFutures[id]}');
     }
     return completer.future;
   }
@@ -33,13 +31,9 @@ class FutureManager {
       _pendingFutures.remove(id);
       if (code >= 200 && code < 400) {
         callbacks.completer?.complete(onOK);
-        _logger.i(
-            'FutureManager - execFuture - id: $id, code: $code, _pending[$id]: ${_pendingFutures[id]}');
       } else {
         final exceptionMessage =
             (errorText ?? '') + ' (' + code.toString() + ')';
-        _logger.e(
-            'FutureManager - execFuture - id: $id, code: $code, error message: $exceptionMessage, _pending[$id]: ${_pendingFutures[id]}');
         callbacks.completer?.completeError(Exception(exceptionMessage));
       }
     }
@@ -55,16 +49,12 @@ class FutureManager {
       if (featureCB.ts!.isBefore(expires)) {
         markForRemoval.add(key);
         featureCB.completer?.completeError(exception);
-        _logger.e(
-            'FutureManager - checkExpiredFutures - completeError, key expired: $key, markForRemoval: $markForRemoval');
       }
     });
     if (markForRemoval.isNotEmpty) {
       _pendingFutures.removeWhere((key, value) {
         return markForRemoval.contains(key);
       });
-      _logger.i(
-          'FutureManager - checkExpiredFutures - _pendingFutures after removed: $_pendingFutures');
     }
   }
 
@@ -85,16 +75,12 @@ class FutureManager {
       cb.completer?.completeError(reason);
     });
     _pendingFutures.clear();
-    _logger.e(
-        'FutureManager - rejectAllFutures - _pendingFutures: $_pendingFutures');
   }
 
   void stopCheckingExpiredFutures() {
     if (_expiredFuturesCheckerTimer != null) {
       _expiredFuturesCheckerTimer?.cancel();
       _expiredFuturesCheckerTimer = null;
-      _logger.i(
-          'FutureManager - stopCheckingExpiredFutures - _expiredFuturesCheckerTimer cancelled');
     }
   }
 

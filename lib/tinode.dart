@@ -185,8 +185,6 @@ class Tinode {
     });
 
     _onConnectedSubscription ??= _connectionService.onOpen.listen((_) {
-      _logger.i(
-          'Tinode - _doSubscriptions - _onConnectedSubscription - _futureManager.checkExpiredFutures');
       _futureManager.checkExpiredFutures();
       onConnected.add(null);
     });
@@ -204,16 +202,12 @@ class Tinode {
     _onMessageSubscription = null;
     _onConnectedSubscription?.cancel();
     _onConnectedSubscription = null;
-    _logger.i(
-        'Tinode - _unsubscribeAll - _futureManager.stopCheckingExpiredFutures');
     _futureManager.stopCheckingExpiredFutures();
   }
 
   /// Unsubscribe and reset local variables when connection closes
   void _onConnectionDisconnect() {
     unsubscribeAll();
-    _logger.i(
-        'Tinode - _doSubscriptions - _onConnectionDisconnect - rejectAllFutures');
     _futureManager.rejectAllFutures(0, 'disconnect');
     _cacheManager.map((String key, dynamic value) {
       if (key.contains('topic:')) {
@@ -231,14 +225,12 @@ class Tinode {
     if (input == null || input == '') {
       return;
     }
-    _loggerService.log('in: ' + input);
 
     // Send raw message to listener
     onRawMessage.add(input);
 
     if (input == '0') {
       onNetworkProbe.add(null);
-      _logger.e('_onConnectionMessage - input: = 0, return');
       return;
     }
     var pkt;
@@ -260,24 +252,14 @@ class Tinode {
     onMessage.add(message);
 
     if (message.ctrl != null) {
-      _logger.i(
-          '_onConnectionMessage - handleCtrlMessage - ctrl id: ${message.ctrl?.id}');
       _tinodeService.handleCtrlMessage(message.ctrl);
     } else if (message.meta != null) {
-      _logger.i(
-          '_onConnectionMessage - handleMetaMessage - meta id: ${message.meta?.id}');
       _tinodeService.handleMetaMessage(message.meta);
     } else if (message.data != null) {
-      _logger.i(
-          '_onConnectionMessage - handleDataMessage - data: ${message.data}');
       _tinodeService.handleDataMessage(message.data);
     } else if (message.pres != null) {
-      _logger.i(
-          '_onConnectionMessage - handlePresMessage - pres: ${message.pres}');
       _tinodeService.handlePresMessage(message.pres);
     } else if (message.info != null) {
-      _logger.i(
-          '_onConnectionMessage - handleInfoMessage - info: ${message.info}');
       _tinodeService.handleInfoMessage(message.info);
     }
   }
