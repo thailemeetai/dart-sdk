@@ -535,6 +535,10 @@ class Tinode {
     return _authService.userId!;
   }
 
+  String? getLastLoginToken() {
+    return _authService.lastLogin;
+  }
+
   /// Check if the given user ID is equal to the current user's user id
   bool isMe(String userId) {
     return _tinodeService.isMe(userId);
