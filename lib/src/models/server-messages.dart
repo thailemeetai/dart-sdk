@@ -140,7 +140,8 @@ enum DataMessageType {
   reaction,
   voice,
   fun_question,
-  photo
+  photo,
+  group_photo
 }
 
 extension DataMessageTypeExtension on DataMessageType {
@@ -166,6 +167,8 @@ extension DataMessageTypeExtension on DataMessageType {
         return 'fun_question';
       case DataMessageType.photo:
         return 'photo';
+      case DataMessageType.group_photo:
+        return 'group_photo';
       default:
         return '';
     }
@@ -193,6 +196,8 @@ extension DataMessageTypeExtension on DataMessageType {
         return DataMessageType.fun_question;
       case 'photo':
         return DataMessageType.photo;
+      case 'group_photo':
+        return DataMessageType.group_photo;
       default:
         return DataMessageType.text;
     }
