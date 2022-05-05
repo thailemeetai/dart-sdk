@@ -71,7 +71,8 @@ class Topic {
   late List<String> tags;
 
   /// Message cache, sorted by message seq values, from old to new
-  final SortedCache<DataMessage> _messages = SortedCache<DataMessage>((a, b) => (a.seq ?? 0) - (b.seq ?? 0), true);
+  final SortedCache<DataMessage> _messages =
+      SortedCache<DataMessage>((a, b) => (a.seq ?? 0) - (b.seq ?? 0), true);
 
   /// true if the topic is currently live
   bool _subscribed = false;
@@ -128,7 +129,8 @@ class Topic {
   PublishSubject<Topic> onMetaDesc = PublishSubject<Topic>();
 
   /// This event will be triggered when a `meta.sub` message is received
-  PublishSubject<TopicSubscription> onMetaSub = PublishSubject<TopicSubscription>();
+  PublishSubject<TopicSubscription> onMetaSub =
+      PublishSubject<TopicSubscription>();
 
   /// This event will be triggered when a `pres` message is received
   PublishSubject<PresMessage> onPres = PublishSubject<PresMessage>();
@@ -137,7 +139,8 @@ class Topic {
   PublishSubject<InfoMessage> onInfo = PublishSubject<InfoMessage>();
 
   /// This event will be triggered when topic subscriptions are updated
-  PublishSubject<List<TopicSubscription>> onSubsUpdated = PublishSubject<List<TopicSubscription>>();
+  PublishSubject<List<TopicSubscription>> onSubsUpdated =
+      PublishSubject<List<TopicSubscription>>();
 
   /// This event will be triggered when topic tags are updated
   PublishSubject<List<String>> onTagsUpdated = PublishSubject<List<String>>();
@@ -168,15 +171,18 @@ class Topic {
     _subscribed = value;
   }
 
-  Future<CtrlMessage> subscribe(GetQuery getParams, SetParams? setParams, {String? roomId}) async {
+  Future<CtrlMessage> subscribe(GetQuery getParams, SetParams? setParams,
+      {String? roomId, bool force = false}) async {
     // If the topic is already subscribed, return resolved promise
-    if (isSubscribed) {
+    if (!force && isSubscribed) {
       return Future.error(Exception('topic is already subscribed'));
     }
 
     // Send subscribe message, handle async response.
     // If topic name is explicitly provided, use it. If no name, then it's a new group topic, use "new".
-    var response = await _tinodeService.subscribe(name ?? topic_names.TOPIC_NEW, getParams, setParams, roomId: roomId);
+    var response = await _tinodeService.subscribe(
+        name ?? topic_names.TOPIC_NEW, getParams, setParams,
+        roomId: roomId);
     var ctrl = response is CtrlMessage ? response : null;
     var meta = response is MetaMessage ? response : null;
 
@@ -194,7 +200,9 @@ class Topic {
     }
 
     _subscribed = true;
-    acs = (ctrl.params != null && ctrl.params['acs'] != null) ? AccessMode(ctrl.params['acs']) : acs;
+    acs = (ctrl.params != null && ctrl.params['acs'] != null)
+        ? AccessMode(ctrl.params['acs'])
+        : acs;
 
     // Set topic name for new topics and add it to cache.
     if (_new) {
@@ -335,7 +343,8 @@ class Topic {
       query.withEarlierData(limit);
       future = future.then((response) {
         var ctrl = CtrlMessage.fromMessage(response);
-        if (ctrl.params != null && (ctrl.params['count'] == null || ctrl.params['count'] == 0)) {
+        if (ctrl.params != null &&
+            (ctrl.params['count'] == null || ctrl.params['count'] == 0)) {
           _noEarlierMsgs = true;
         }
       });
@@ -347,13 +356,15 @@ class Topic {
   void fetchMoreMessages(int limit) async {
     var query = startMetaQuery();
     var response = await getMeta(query.withEarlierData(limit).build());
-    if(response is Map<String, dynamic>) {
+    if (response is Map<String, dynamic>) {
       var ctrl = CtrlMessage.fromMessage(response);
-      if (ctrl.params != null && (ctrl.params['count'] == null || ctrl.params['count'] == 0)) {
+      if (ctrl.params != null &&
+          (ctrl.params['count'] == null || ctrl.params['count'] == 0)) {
         _noEarlierMsgs = true;
       }
-    } else if(response is CtrlMessage) {
-      if (response.params != null && (response.params['count'] == null || response.params['count'] == 0)) {
+    } else if (response is CtrlMessage) {
+      if (response.params != null &&
+          (response.params['count'] == null || response.params['count'] == 0)) {
         _noEarlierMsgs = true;
       }
     }
@@ -414,7 +425,9 @@ class Topic {
   /// Update access mode of the current user or of another topic subscriber
   Future<CtrlMessage> updateMode(String? userId, String update) {
     var user = userId != null && userId != '' ? subscriber(userId) : null;
-    var am = user != null ? user.acs!.updateGiven(update).getGiven() : getAccessMode().updateWant(update).getWant();
+    var am = user != null
+        ? user.acs!.updateGiven(update).getGiven()
+        : getAccessMode().updateWant(update).getWant();
     return setMeta(SetParams(sub: TopicSubscription(user: userId, mode: am)));
   }
 
@@ -428,13 +441,16 @@ class Topic {
     if (private && private.arch == archive) {
       return Future.error(Exception('Cannot publish on inactive topic'));
     }
-    return setMeta(SetParams(desc: TopicDescription(private: {'archive': archive ? true : DEL_CHAR})));
+    return setMeta(SetParams(
+        desc:
+            TopicDescription(private: {'archive': archive ? true : DEL_CHAR})));
   }
 
   /// Delete messages. Hard-deleting messages requires Owner permission
   Future<CtrlMessage> deleteMessages(List<DelRange> ranges, bool hard) async {
     if (!isSubscribed) {
-      return Future.error(Exception('Cannot delete messages in inactive topic'));
+      return Future.error(
+          Exception('Cannot delete messages in inactive topic'));
     }
 
     ranges.sort((r1, r2) {
@@ -539,7 +555,8 @@ class Topic {
   /// Delete subscription. Requires Share permission. Wrapper for Tinode.deleteSubscription
   Future<CtrlMessage> deleteSubscription(String userId) async {
     if (!isSubscribed) {
-      return Future.error(Exception('Cannot delete subscription in inactive topic'));
+      return Future.error(
+          Exception('Cannot delete subscription in inactive topic'));
     }
     // Send {del} message, return promise
     var ctrl = await _tinodeService.deleteSubscription(name ?? '', userId);
@@ -707,7 +724,10 @@ class Topic {
   void flushMessageRange(int fromId, int untilId) {
     // start, end: find insertion points (nearest == true).
     var since = _messages.find(DataMessage(seq: fromId), true);
-    return since >= 0 ? _messages.deleteRange(since, _messages.find(DataMessage(seq: untilId), true)) : [];
+    return since >= 0
+        ? _messages.deleteRange(
+            since, _messages.find(DataMessage(seq: untilId), true))
+        : [];
   }
 
   /// Get type of the topic: me, p2p, grp, fnd...
@@ -776,7 +796,11 @@ class Topic {
 
     // Update locally cached contact with the new message count.
     var me = _tinodeService.getTopic(topic_names.TOPIC_ME) as TopicMe;
-    me.setMsgReadRecv(name ?? '', (data.from == null || _tinodeService.isMe(data.from!)) ? 'read' : 'msg', data.seq!, data.ts);
+    me.setMsgReadRecv(
+        name ?? '',
+        (data.from == null || _tinodeService.isMe(data.from!)) ? 'read' : 'msg',
+        data.seq!,
+        data.ts);
   }
 
   /// Called by `Tinode`
@@ -824,7 +848,10 @@ class Topic {
         if (user != null) {
           user.online = pres.what == 'on';
         } else {
-          _loggerService.warn('Presence update for an unknown user' + (name ?? '') + ' ' + (pres.src ?? ''));
+          _loggerService.warn('Presence update for an unknown user' +
+              (name ?? '') +
+              ' ' +
+              (pres.src ?? ''));
         }
         break;
 
@@ -858,7 +885,10 @@ class Topic {
           // Known user
           user.acs!.updateAll(pres.dacs);
           // Update user's access mode.
-          processMetaSub([TopicSubscription(user: userId, updated: DateTime.now(), acs: user.acs)]);
+          processMetaSub([
+            TopicSubscription(
+                user: userId, updated: DateTime.now(), acs: user.acs)
+          ]);
         }
 
         break;
@@ -1030,7 +1060,8 @@ class Topic {
 
   /// Update global user cache and local subscribers cache
   /// Don't call this method for non-subscribers
-  TopicSubscription? _updateCachedUser(String userId, TopicSubscription object) {
+  TopicSubscription? _updateCachedUser(
+      String userId, TopicSubscription object) {
     var cached = _cacheManager.getUser(userId);
 
     if (cached != null) {
@@ -1100,7 +1131,8 @@ class Topic {
       }
 
       // New message is reducing the existing gap
-      if (data.seq == ((prev.hi != null && prev.hi! > 0) ? prev.hi : prev.seq)! + 1) {
+      if (data.seq ==
+          ((prev.hi != null && prev.hi! > 0) ? prev.hi : prev.seq)! + 1) {
         // No new gap. Replace previous with current.
         prev = data;
         return;
@@ -1122,18 +1154,22 @@ class Topic {
       ranges.add(prev);
     }, null, null);
 
-    var seq = this.seq != null ? this.seq!: 0;
+    var seq = this.seq != null ? this.seq! : 0;
     // Check for missing messages at the end.
     // All messages could be missing or it could be a new topic with no messages.
     var last = _messages.length > 0 ? _messages.getLast() : null;
     var maxSeq = max(seq, _maxSeq);
-    if ((maxSeq > 0 && last == null) || (last != null && (((last.hi != null && last.hi! > 0) ? last.hi : last.seq)! < maxSeq))) {
+    if ((maxSeq > 0 && last == null) ||
+        (last != null &&
+            (((last.hi != null && last.hi! > 0) ? last.hi : last.seq)! <
+                maxSeq))) {
       if (last != null && (last.hi != null && last.hi! > 0)) {
         // Extend existing gap
         last.hi = maxSeq;
       } else {
         // Create new gap.
-        ranges.add(DataMessage(seq: last != null ? last.seq! + 1 : 1, hi: maxSeq));
+        ranges.add(
+            DataMessage(seq: last != null ? last.seq! + 1 : 1, hi: maxSeq));
       }
     }
 
