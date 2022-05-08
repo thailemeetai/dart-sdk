@@ -370,6 +370,24 @@ class Topic {
     }
   }
 
+  Future<void> fetchMoreMessagesAsync(int limit) async {
+    var query = startMetaQuery();
+    var response = await getMeta(query.withEarlierData(limit).build());
+    if (response is Map<String, dynamic>) {
+      var ctrl = CtrlMessage.fromMessage(response);
+      if (ctrl.params != null &&
+          (ctrl.params['count'] == null || ctrl.params['count'] == 0)) {
+        _noEarlierMsgs = true;
+      }
+    } else if (response is CtrlMessage) {
+      if (response.params != null &&
+          (response.params['count'] == null || response.params['count'] == 0)) {
+        _noEarlierMsgs = true;
+      }
+    }
+    return Future.value();
+  }
+
   /// Update topic metadata
   Future<CtrlMessage> setMeta(SetParams params) async {
     if (params.tags != null && params.tags!.isNotEmpty) {
