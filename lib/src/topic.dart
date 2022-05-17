@@ -104,6 +104,14 @@ class Topic {
   String? status;
   int? seq;
 
+  String? _roomId;
+
+  set roomId(String value) {
+    _roomId = value;
+  }
+
+  String get roomId => _roomId ?? '';
+
   /// Authentication service, responsible for managing credentials and user id
   late AuthService _authService;
 
