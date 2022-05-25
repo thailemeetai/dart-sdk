@@ -3,6 +3,9 @@ import 'dart:convert';
 import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:get_it/get_it.dart';
+import 'package:tinode/src/database/model.dart';
+import 'package:tinode/src/database/objectbox.dart';
+import 'package:tinode/src/database/objectbox.g.dart';
 
 import 'package:tinode/src/models/packet-types.dart' as packet_types;
 import 'package:tinode/src/models/topic-names.dart' as topic_names;
@@ -47,6 +50,10 @@ class TinodeService {
   /// Authentication service, responsible for managing credentials and user id
   late AuthService _authService;
 
+  late ObjectBox _objectbox;
+
+  late Admin _admin;
+
   /// This event will be triggered when a `ctrl` message is received
   PublishSubject<CtrlMessage> onCtrlMessage = PublishSubject<CtrlMessage>();
 
@@ -70,6 +77,7 @@ class TinodeService {
     _configService = GetIt.I.get<ConfigService>();
     _cacheManager = GetIt.I.get<CacheManager>();
     _authService = GetIt.I.get<AuthService>();
+    _registerDatabase();
   }
 
   FutureManager get futureManager => _futureManager;
@@ -467,5 +475,41 @@ class TinodeService {
   /// Check if the given user ID is equal to the current user's user id
   bool isMe(String userId) {
     return _authService.userId == userId;
+  }
+
+  void closeDb() {
+    _objectbox.store.close();
+    if (Admin.isAvailable()) {
+      _admin.close();
+    }
+  }
+
+  void storeDb(DataMessage data) {
+    _objectbox.addDataMessage(data);
+  }
+
+  Future<void> storeMessagesToDb(List<DataMessage> list, {int? offset}) async {
+    await _objectbox.addDataMessages(list, offset: offset);
+  }
+
+  void clearAll() {
+    _objectbox.clearAll();
+  }
+
+  Stream<Query<DataMessage>> getMessageStream(String topic) {
+    return _objectbox.getMessageStream(topic);
+  }
+
+  Query<DataMessage> getMessageStreamQuery(String topic) {
+    return _objectbox.getMessageStreamQuery(topic);
+  }
+
+  Future<void> _registerDatabase() async {
+    _objectbox = await ObjectBox.create();
+
+    if (Admin.isAvailable()) {
+      // Keep a reference until no longer needed or manually closed.
+      _admin = Admin(_objectbox.store);
+    }
   }
 }

@@ -4,8 +4,12 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:logger/logger.dart';
+import 'package:objectbox/objectbox.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:get_it/get_it.dart';
+import 'package:tinode/src/database/model.dart';
+import 'package:tinode/src/database/objectbox.dart';
+import 'package:tinode/src/database/objectbox.g.dart';
 
 import 'package:tinode/src/models/topic-names.dart' as topic_names;
 import 'package:tinode/src/models/server-configuration.dart';
@@ -57,6 +61,7 @@ export 'package:tinode/src/topic-fnd.dart';
 export 'package:tinode/src/topic-me.dart';
 export 'package:tinode/src/topic.dart';
 export 'package:tinode/src/models/message.dart';
+export 'package:tinode/src/database/model.dart';
 
 /// Provides a simple interface to interact with tinode server using websocket
 class Tinode {
@@ -217,6 +222,7 @@ class Tinode {
       return MapEntry(key, value);
     });
     onDisconnect.add(null);
+    _tinodeService.closeDb();
   }
 
   /// Handler for newly received messages from server

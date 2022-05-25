@@ -1,5 +1,9 @@
+import 'dart:collection';
+
+import 'package:logger/logger.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:get_it/get_it.dart';
+import 'package:tinode/src/database/model.dart';
 
 import 'dart:async';
 import 'dart:math';
@@ -156,9 +160,58 @@ class Topic {
   /// This event will be triggered when all messages are received
   PublishSubject<int> onAllMessagesReceived = PublishSubject<int>();
 
+  final SortedCache<DataMessage> _cacheMessages = SortedCache<DataMessage>((a, b) => (a.seq ?? 0) - (b.seq ?? 0), true);
+  final List<DataMessage> _qCacheMessages = [];
+  BehaviorSubject<DataMessage> onMessageReceived = BehaviorSubject<DataMessage>();
+  StreamSubscription? _subscription;
+  // List<StreamSubscription> _subscription2 = <StreamSubscription>[];
+  // StreamSubscription? _subscription2;
+  final _logger = Logger();
+
+  PublishSubject<DataMessage?> onDataThroughLocal = PublishSubject<DataMessage?>();
+
   Topic(String topicName) {
     _resolveDependencies();
     name = topicName;
+
+    if(topicName != 'me') {
+      _logger.i('ObjectBox#Topic = $topicName');
+
+      onMessageReceived.debounceTime(const Duration(milliseconds: 800)).listen((event) {
+        // store local db
+        _logger.i('ObjectBox#DebounceTime cache = ${_cacheMessages.buffer.length} - list = ${_messages.buffer.length}');
+        // _tinodeService.storeMessagesToDb(_cacheMessages.buffer, offset: 0).then((_) {
+        //   _cacheMessages.reset();
+        // });
+
+        while(_qCacheMessages.isNotEmpty) {
+          final cut = _qCacheMessages.length >= 50? 50: _qCacheMessages.length;
+          final insertedArray = _qCacheMessages.take(cut).toList();
+          _qCacheMessages.removeRange(0, cut);
+          _tinodeService.storeMessagesToDb(insertedArray, offset: 0);
+        }
+
+        _logger.i('ObjectBox#After inserted = ${_qCacheMessages.length}');
+      });
+
+      // _tinodeService.fetchMessageStream(topicName).map((event) => event.stream()).listen((message) {
+      //   onDataThroughLocal.add(message);
+      // });
+
+      // _subscription ??= _tinodeService.getMessageStream(topicName).listen((queryStream) {
+      //   _subscription2 ??= queryStream.stream().listen((message) {
+      //     onDataThroughLocal.add(message);
+      //   });
+      //
+      //   // _subscription2.add(queryStream.stream().listen((message) {
+      //   //   onDataThroughLocal.add(message);
+      //   // }));
+      // });
+
+      _subscription ??= _tinodeService.getMessageStreamQuery(topicName).stream().listen((message) {
+        onDataThroughLocal.add(message);
+      });
+    }
   }
 
   void _resolveDependencies() {
@@ -815,10 +868,15 @@ class Topic {
 
     if (!data.noForwarding!) {
       _messages.put([data]);
+      _cacheMessages.put([data]);
+      _qCacheMessages.add(data);
       _updateDeletedRanges();
     }
 
     onData.add(data);
+    _logger.i('ObjectBox#onData seq = ${data.seq} - time = ${DateTime.now()}');
+
+    onMessageReceived.add(data);
 
     // Update locally cached contact with the new message count.
     var me = _tinodeService.getTopic(topic_names.TOPIC_ME) as TopicMe;
@@ -1075,6 +1133,17 @@ class Topic {
   /// This topic is either deleted or unsubscribed from
   void _gone() {
     _messages.reset();
+    _cacheMessages.reset();
+    _qCacheMessages.clear();
+    _tinodeService.clearAll();
+    _tinodeService.getMessageStreamQuery(name!).close();
+    _subscription?.cancel();
+    // _subscription2?.cancel();
+    // if(_subscription2.isNotEmpty) {
+    //   for(final d in _subscription2) {
+    //     d.cancel();
+    //   }
+    // }
     _users.removeWhere((key, value) => true);
     acs = AccessMode(null);
     private = null;
@@ -1202,6 +1271,8 @@ class Topic {
     // Insert new gaps into cache.
     ranges.map((gap) {
       _messages.put([gap]);
+      _cacheMessages.put([gap]);
+      _qCacheMessages.add(gap);
     });
   }
 

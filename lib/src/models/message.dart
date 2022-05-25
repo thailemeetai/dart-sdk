@@ -1,5 +1,6 @@
 import 'package:get_it/get_it.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:tinode/src/database/model.dart';
 
 import 'package:tinode/src/models/message-status.dart' as message_status;
 import 'package:tinode/src/models/packet-types.dart' as packet_types;
@@ -50,6 +51,7 @@ class Message {
       topic: topicName,
       seq: seq,
       ts: ts,
+      combinedId: '${topicName}_$seq'
     );
   }
 
