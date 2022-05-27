@@ -12,6 +12,7 @@ class ObjectBox {
   late final Box<DataMessage> dataMessageBox;
 
   Stream<Query<DataMessage>>? queryStream;
+  Query<DataMessage>? query;
 
   final _logger = Logger();
 
@@ -23,11 +24,15 @@ class ObjectBox {
     return queryStream!;
   }
 
-  Query<DataMessage> getMessageStreamQuery(String topic) {
+  Query<DataMessage>? getMessageStreamQuery(String topic) {
     final msgBox = store.box<DataMessage>();
     final builder = msgBox.query(DataMessage_.topic.equals(topic))..order(DataMessage_.seq);
     // builder.watch(triggerImmediately: true);
-    return builder.build();
+    // return builder.build();
+    query = builder.build();
+    query!..limit = 20
+          ..offset = 0;
+    return query;
   }
 
   void addDataMessage(DataMessage message) {

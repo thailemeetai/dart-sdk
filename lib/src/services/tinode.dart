@@ -500,7 +500,7 @@ class TinodeService {
     return _objectbox.getMessageStream(topic);
   }
 
-  Query<DataMessage> getMessageStreamQuery(String topic) {
+  Query<DataMessage>? getMessageStreamQuery(String topic) {
     return _objectbox.getMessageStreamQuery(topic);
   }
 

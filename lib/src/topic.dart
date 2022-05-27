@@ -208,10 +208,32 @@ class Topic {
       //   // }));
       // });
 
-      _subscription ??= _tinodeService.getMessageStreamQuery(topicName).stream().listen((message) {
+      final l = 20;
+      final o = 0;
+      final query = _tinodeService.getMessageStreamQuery(topicName);
+        // ..limit = l
+        // ..offset = o;
+      _subscription ??= query?.stream().listen((message) {
+        localOffset++;
         onDataThroughLocal.add(message);
+        _logger.i('ObjectBox#ListenA message = ${message.seq}');
       });
     }
+  }
+
+  int localOffset = 0;
+
+  void fetchMoreLocalMessages({int? limit, int? offset}) {
+    final l = limit ?? 20;
+    final o = offset ?? localOffset;// _messages.length;
+    _logger.i('ObjectBox#fetchMoreLocalMessages offset = $l - limit = $o');
+    final query = _tinodeService.getMessageStreamQuery(name!);
+    query?..limit = l
+      ..offset = o;
+    // _subscription ??= query.stream().listen((message) {
+    //   _logger.i('ObjectBox#ListenB message = ${message.seq}');
+    //   onDataThroughLocal.add(message);
+    // });
   }
 
   void _resolveDependencies() {
@@ -1136,7 +1158,7 @@ class Topic {
     _cacheMessages.reset();
     _qCacheMessages.clear();
     _tinodeService.clearAll();
-    _tinodeService.getMessageStreamQuery(name!).close();
+    _tinodeService.getMessageStreamQuery(name!)?.close();
     _subscription?.cancel();
     // _subscription2?.cancel();
     // if(_subscription2.isNotEmpty) {
