@@ -492,16 +492,16 @@ class TinodeService {
     await _objectbox.addDataMessages(list, offset: offset);
   }
 
+  void updateMessageToDb(String topic, DataMessage message) {
+    _objectbox.updateMessage(topic, message);
+  }
+
   void clearAll() {
     _objectbox.clearAll();
   }
 
-  Stream<Query<DataMessage>> getMessageStream(String topic) {
-    return _objectbox.getMessageStream(topic);
-  }
-
-  Query<DataMessage>? getMessageStreamQuery(String topic) {
-    return _objectbox.getMessageStreamQuery(topic);
+  List<DataMessage> getMessagesWith(String topic, {int? offset, int? limit}) {
+    return _objectbox.getMessagesWith(topic, offset: offset, limit: limit);
   }
 
   Future<void> _registerDatabase() async {

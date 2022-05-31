@@ -163,12 +163,11 @@ class Topic {
   final SortedCache<DataMessage> _cacheMessages = SortedCache<DataMessage>((a, b) => (a.seq ?? 0) - (b.seq ?? 0), true);
   final List<DataMessage> _qCacheMessages = [];
   BehaviorSubject<DataMessage> onMessageReceived = BehaviorSubject<DataMessage>();
-  StreamSubscription? _subscription;
-  // List<StreamSubscription> _subscription2 = <StreamSubscription>[];
-  // StreamSubscription? _subscription2;
   final _logger = Logger();
 
-  PublishSubject<DataMessage?> onDataThroughLocal = PublishSubject<DataMessage?>();
+  // PublishSubject<DataMessage?> onDataThroughLocal = PublishSubject<DataMessage?>();
+  ReplaySubject<DataMessage?> onDataThroughLocal = ReplaySubject<DataMessage?>();
+  int localOffset = 0;
 
   Topic(String topicName) {
     _resolveDependencies();
@@ -180,10 +179,6 @@ class Topic {
       onMessageReceived.debounceTime(const Duration(milliseconds: 800)).listen((event) {
         // store local db
         _logger.i('ObjectBox#DebounceTime cache = ${_cacheMessages.buffer.length} - list = ${_messages.buffer.length}');
-        // _tinodeService.storeMessagesToDb(_cacheMessages.buffer, offset: 0).then((_) {
-        //   _cacheMessages.reset();
-        // });
-
         while(_qCacheMessages.isNotEmpty) {
           final cut = _qCacheMessages.length >= 50? 50: _qCacheMessages.length;
           final insertedArray = _qCacheMessages.take(cut).toList();
@@ -194,46 +189,24 @@ class Topic {
         _logger.i('ObjectBox#After inserted = ${_qCacheMessages.length}');
       });
 
-      // _tinodeService.fetchMessageStream(topicName).map((event) => event.stream()).listen((message) {
-      //   onDataThroughLocal.add(message);
-      // });
 
-      // _subscription ??= _tinodeService.getMessageStream(topicName).listen((queryStream) {
-      //   _subscription2 ??= queryStream.stream().listen((message) {
-      //     onDataThroughLocal.add(message);
-      //   });
-      //
-      //   // _subscription2.add(queryStream.stream().listen((message) {
-      //   //   onDataThroughLocal.add(message);
-      //   // }));
-      // });
-
-      final l = 20;
-      final o = 0;
-      final query = _tinodeService.getMessageStreamQuery(topicName);
-        // ..limit = l
-        // ..offset = o;
-      _subscription ??= query?.stream().listen((message) {
+      final initMessages = _tinodeService.getMessagesWith(topicName);
+      for(final msg in initMessages) {
         localOffset++;
-        onDataThroughLocal.add(message);
-        _logger.i('ObjectBox#ListenA message = ${message.seq}');
-      });
+        onDataThroughLocal.add(msg);
+      }
     }
   }
 
-  int localOffset = 0;
-
   void fetchMoreLocalMessages({int? limit, int? offset}) {
     final l = limit ?? 20;
-    final o = offset ?? localOffset;// _messages.length;
-    _logger.i('ObjectBox#fetchMoreLocalMessages offset = $l - limit = $o');
-    final query = _tinodeService.getMessageStreamQuery(name!);
-    query?..limit = l
-      ..offset = o;
-    // _subscription ??= query.stream().listen((message) {
-    //   _logger.i('ObjectBox#ListenB message = ${message.seq}');
-    //   onDataThroughLocal.add(message);
-    // });
+    final o = offset ?? localOffset;
+    _logger.i('ObjectBox#fetchMoreLocalMessages limit = $l - offset = $o');
+    final messages = _tinodeService.getMessagesWith(name!, limit: l, offset: o);
+    for(final msg in messages) {
+      localOffset++;
+      onDataThroughLocal.add(msg);
+    }
   }
 
   void _resolveDependencies() {
@@ -895,10 +868,16 @@ class Topic {
       _updateDeletedRanges();
     }
 
-    onData.add(data);
+    // onData.add(data);
     _logger.i('ObjectBox#onData seq = ${data.seq} - time = ${DateTime.now()}');
 
-    onMessageReceived.add(data);
+    final headData = data.head;
+    if (headData != null && (headData.containsKey('reaction_to') || headData.containsKey('answer_to'))) {
+      _tinodeService.updateMessageToDb(name!, data);
+      onDataThroughLocal.add(data);
+    } else {
+      onMessageReceived.add(data);
+    }
 
     // Update locally cached contact with the new message count.
     var me = _tinodeService.getTopic(topic_names.TOPIC_ME) as TopicMe;
@@ -1158,14 +1137,6 @@ class Topic {
     _cacheMessages.reset();
     _qCacheMessages.clear();
     _tinodeService.clearAll();
-    _tinodeService.getMessageStreamQuery(name!)?.close();
-    _subscription?.cancel();
-    // _subscription2?.cancel();
-    // if(_subscription2.isNotEmpty) {
-    //   for(final d in _subscription2) {
-    //     d.cancel();
-    //   }
-    // }
     _users.removeWhere((key, value) => true);
     acs = AccessMode(null);
     private = null;
