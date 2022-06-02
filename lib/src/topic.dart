@@ -179,22 +179,34 @@ class Topic {
       onMessageReceived.debounceTime(const Duration(milliseconds: 800)).listen((event) {
         // store local db
         _logger.i('ObjectBox#DebounceTime cache = ${_cacheMessages.buffer.length} - list = ${_messages.buffer.length}');
-        while(_qCacheMessages.isNotEmpty) {
+        while(_qCacheMessages.isNotEmpty) { // A4
           final cut = _qCacheMessages.length >= 50? 50: _qCacheMessages.length;
           final insertedArray = _qCacheMessages.take(cut).toList();
           _qCacheMessages.removeRange(0, cut);
-          _tinodeService.storeMessagesToDb(insertedArray, offset: 0);
+          _tinodeService.storeMessagesToDb(insertedArray, offset: 0).then((value) {
+            if(cut == 1) {
+              // single msg
+              final singleMsg = insertedArray[0]; // data from tinode
+              localOffset++;
+              onDataThroughLocal.add(singleMsg);
+            }
+          });
         }
 
+        // onDataThroughLocal.add(A4);
+
+        // A1, A2, A3, A4 sending -> inserted db (minh chua co step lay msg chinh minh send)
         _logger.i('ObjectBox#After inserted = ${_qCacheMessages.length}');
       });
 
-
-      final initMessages = _tinodeService.getMessagesWith(topicName);
-      for(final msg in initMessages) {
-        localOffset++;
-        onDataThroughLocal.add(msg);
-      }
+      // open chat details
+      Future.delayed(const Duration(milliseconds: 2700)).then((_) {
+        final initMessages = _tinodeService.getMessagesWith(topicName);
+        for(final msg in initMessages) {
+          localOffset++;
+          onDataThroughLocal.add(msg);
+        }
+      });
     }
   }
 
@@ -873,9 +885,11 @@ class Topic {
 
     final headData = data.head;
     if (headData != null && (headData.containsKey('reaction_to') || headData.containsKey('answer_to'))) {
+      // update reaction + answer
       _tinodeService.updateMessageToDb(name!, data);
       onDataThroughLocal.add(data);
     } else {
+      // insert batch msgs
       onMessageReceived.add(data);
     }
 
