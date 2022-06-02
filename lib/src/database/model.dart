@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:equatable/equatable.dart';
 import 'package:intl/intl.dart';
 import 'package:objectbox/objectbox.dart';
 import 'package:tinode/src/models/server-messages.dart';
@@ -21,7 +22,7 @@ class LocalTopic {
 
 
 @Entity()
-class DataMessage { // extends Equatable {
+class DataMessage extends Equatable {
   final localTopic = ToOne<LocalTopic>();
 
   @Id(assignable: true)
@@ -147,7 +148,7 @@ class DataMessage { // extends Equatable {
     );
   }
 
-  // @override
-  // List<Object?> get props =>
-  //     [topic, from, head, ts, seq, content, noForwarding, hi, mark];
+  @override
+  List<Object?> get props =>
+      [topic, from, head, ts, seq, content, noForwarding, hi, mark];
 }

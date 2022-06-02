@@ -183,8 +183,9 @@ class Topic {
           final cut = _qCacheMessages.length >= 50? 50: _qCacheMessages.length;
           final insertedArray = _qCacheMessages.take(cut).toList();
           _qCacheMessages.removeRange(0, cut);
+          final set = insertedArray.toSet();
           _tinodeService.storeMessagesToDb(insertedArray, offset: 0).then((value) {
-            if(cut == 1) {
+            if(set.length == 1) {
               // single msg
               final singleMsg = insertedArray[0]; // data from tinode
               localOffset++;
