@@ -160,29 +160,29 @@ class Topic {
   /// This event will be triggered when all messages are received
   PublishSubject<int> onAllMessagesReceived = PublishSubject<int>();
 
-  final SortedCache<DataMessage> _cacheMessages = SortedCache<DataMessage>((a, b) => (a.seq ?? 0) - (b.seq ?? 0), true);
-  final List<DataMessage> _qCacheMessages = [];
+  final List<DataMessage> _cacheMessages = [];
   BehaviorSubject<DataMessage> onMessageReceived = BehaviorSubject<DataMessage>();
   final _logger = Logger();
 
-  // PublishSubject<DataMessage?> onDataThroughLocal = PublishSubject<DataMessage?>();
   ReplaySubject<DataMessage?> onDataThroughLocal = ReplaySubject<DataMessage?>();
   int localOffset = 0;
+
+  static const int DEFAULT_CACHE_MESSAGE_LIMIT = 50;
+  static const int DEBOUNCE_MESSAGE_RECEIVED_TIME = 800;
+  static const int GET_INIT_MESSAGES_DELAY_TIME = 2700;
+  static const int DEFAULT_MESSAGE_LIMIT = 20;
 
   Topic(String topicName) {
     _resolveDependencies();
     name = topicName;
 
-    if(topicName != 'me') {
-      _logger.i('ObjectBox#Topic = $topicName');
-
-      onMessageReceived.debounceTime(const Duration(milliseconds: 800)).listen((event) {
+    if(topicName != topic_names.TOPIC_ME) {
+      onMessageReceived.debounceTime(const Duration(milliseconds: DEBOUNCE_MESSAGE_RECEIVED_TIME)).listen((event) {
         // store local db
-        _logger.i('ObjectBox#DebounceTime cache = ${_cacheMessages.buffer.length} - list = ${_messages.buffer.length}');
-        while(_qCacheMessages.isNotEmpty) { // A4
-          final cut = _qCacheMessages.length >= 50? 50: _qCacheMessages.length;
-          final insertedArray = _qCacheMessages.take(cut).toList();
-          _qCacheMessages.removeRange(0, cut);
+        while(_cacheMessages.isNotEmpty) {
+          final cut = _cacheMessages.length >= DEFAULT_CACHE_MESSAGE_LIMIT? DEFAULT_CACHE_MESSAGE_LIMIT: _cacheMessages.length;
+          final insertedArray = _cacheMessages.take(cut).toList();
+          _cacheMessages.removeRange(0, cut);
           final set = insertedArray.toSet();
           _tinodeService.storeMessagesToDb(insertedArray, offset: 0).then((value) {
             if(set.length == 1) {
@@ -193,15 +193,10 @@ class Topic {
             }
           });
         }
-
-        // onDataThroughLocal.add(A4);
-
-        // A1, A2, A3, A4 sending -> inserted db (minh chua co step lay msg chinh minh send)
-        _logger.i('ObjectBox#After inserted = ${_qCacheMessages.length}');
       });
 
       // open chat details
-      Future.delayed(const Duration(milliseconds: 2700)).then((_) {
+      Future.delayed(const Duration(milliseconds: GET_INIT_MESSAGES_DELAY_TIME)).then((_) {
         final initMessages = _tinodeService.getMessagesWith(topicName);
         for(final msg in initMessages) {
           localOffset++;
@@ -212,9 +207,8 @@ class Topic {
   }
 
   void fetchMoreLocalMessages({int? limit, int? offset}) {
-    final l = limit ?? 20;
+    final l = limit ?? DEFAULT_MESSAGE_LIMIT;
     final o = offset ?? localOffset;
-    _logger.i('ObjectBox#fetchMoreLocalMessages limit = $l - offset = $o');
     final messages = _tinodeService.getMessagesWith(name!, limit: l, offset: o);
     for(final msg in messages) {
       localOffset++;
@@ -876,21 +870,18 @@ class Topic {
 
     if (!data.noForwarding!) {
       _messages.put([data]);
-      _cacheMessages.put([data]);
-      _qCacheMessages.add(data);
+      _cacheMessages.add(data);
       _updateDeletedRanges();
     }
 
     // onData.add(data);
-    _logger.i('ObjectBox#onData seq = ${data.seq} - time = ${DateTime.now()}');
-
     final headData = data.head;
     if (headData != null && (headData.containsKey('reaction_to') || headData.containsKey('answer_to'))) {
       // update reaction + answer
       _tinodeService.updateMessageToDb(name!, data);
       onDataThroughLocal.add(data);
     } else {
-      // insert batch msgs
+      // insert batch messages
       onMessageReceived.add(data);
     }
 
@@ -1149,8 +1140,7 @@ class Topic {
   /// This topic is either deleted or unsubscribed from
   void _gone() {
     _messages.reset();
-    _cacheMessages.reset();
-    _qCacheMessages.clear();
+    _cacheMessages.clear();
     _tinodeService.clearAll();
     _users.removeWhere((key, value) => true);
     acs = AccessMode(null);
@@ -1280,7 +1270,7 @@ class Topic {
     ranges.map((gap) {
       _messages.put([gap]);
       _cacheMessages.put([gap]);
-      _qCacheMessages.add(gap);
+      _cacheMessages.add(gap);
     });
   }
 

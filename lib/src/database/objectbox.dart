@@ -80,7 +80,6 @@ class ObjectBox {
     final query = dataMessageBox.query(DataMessage_.combinedId.equals(combinedId)).build();
     final existingMsg = query.findFirst();
 
-    _logger.i('ObjectBox#Add Single combinedId = $combinedId');
     if(existingMsg == null) {
       store.runInTransactionAsync(TxMode.write, _addDataMessageInTx, message);
     }
@@ -88,15 +87,10 @@ class ObjectBox {
   }
 
   static void _addDataMessageInTx(Store store, DataMessage data) {
-    store.box<DataMessage>().put(data); // write 17 -> crash
-    // store.box<DataMessage>().putQueued(data); write 30 -> crash
-    // store.box<DataMessage>().putAsync(data); // write 39 -> crash
-
-    // store.box<DataMessage>().put(object)
+    store.box<DataMessage>().put(data);
   }
 
   Future<void> addDataMessages(List<DataMessage> messages, {int? offset}) async {
-    _logger.i('ObjectBox#Add Batch size = ${messages.length} - offset = $offset');
     if(messages.isEmpty) return;
     final topic = messages[0].topic ?? '';
     final topicBox = store.box<LocalTopic>();
@@ -129,9 +123,6 @@ class ObjectBox {
   void clearAll() {
     // dataMessageBox.removeAll();
   }
-
-  static void _putMessagesInTx(Store store, List<DataMessage> messages) =>
-      store.box<DataMessage>().putMany(messages);
 
   /// Create an instance of ObjectBox to use throughout the app.
   static Future<ObjectBox> create() async {

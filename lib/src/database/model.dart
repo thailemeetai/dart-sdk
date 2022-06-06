@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:equatable/equatable.dart';
-import 'package:intl/intl.dart';
 import 'package:objectbox/objectbox.dart';
 import 'package:tinode/src/models/server-messages.dart';
 
