@@ -1269,7 +1269,6 @@ class Topic {
     // Insert new gaps into cache.
     ranges.map((gap) {
       _messages.put([gap]);
-      _cacheMessages.put([gap]);
       _cacheMessages.add(gap);
     });
   }
