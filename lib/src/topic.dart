@@ -1141,7 +1141,7 @@ class Topic {
   void _gone() {
     _messages.reset();
     _cacheMessages.clear();
-    _tinodeService.clearAll();
+    // _tinodeService.clearAll();
     _users.removeWhere((key, value) => true);
     acs = AccessMode(null);
     private = null;

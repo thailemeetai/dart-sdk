@@ -192,6 +192,7 @@ class Tinode {
     _onConnectedSubscription ??= _connectionService.onOpen.listen((_) {
       _futureManager.checkExpiredFutures();
       onConnected.add(null);
+      openDb();
     });
 
     _onDisconnectedSubscription ??= _connectionService.onDisconnect.listen((_) {
@@ -210,6 +211,14 @@ class Tinode {
     _futureManager.stopCheckingExpiredFutures();
   }
 
+  void openDb() {
+    _tinodeService.registerDatabase();
+  }
+
+  void closeDb() {
+    _tinodeService.closeDb();
+  }
+
   /// Unsubscribe and reset local variables when connection closes
   void _onConnectionDisconnect() {
     unsubscribeAll();
@@ -222,7 +231,8 @@ class Tinode {
       return MapEntry(key, value);
     });
     onDisconnect.add(null);
-    _tinodeService.closeDb();
+    closeDb();
+    // _tinodeService.closeDb();
   }
 
   /// Handler for newly received messages from server
@@ -307,6 +317,8 @@ class Tinode {
     _authService.reset();
     // clear cache & close connect
     disconnect();
+    // clear db
+    _tinodeService.clearDb();
   }
 
   /// Current user token

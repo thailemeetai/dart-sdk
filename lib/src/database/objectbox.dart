@@ -8,11 +8,9 @@ class ObjectBox {
 
   static const int DEFAULT_MESSAGE_LIMIT = 20;
 
-  static const int DEFAULT_MESSAGE_THRESHOLD_IN_TOPIC = 10000000;
+  static const int DEFAULT_MESSAGE_THRESHOLD_IN_TOPIC = 3000000;
 
   late final Store store;
-
-  late final Box<DataMessage> dataMessageBox;
 
   final _logger = Logger();
 
@@ -73,6 +71,7 @@ class ObjectBox {
   }
 
   void addDataMessage(DataMessage message) {
+    final dataMessageBox = Box<DataMessage>(store);
     final topic = message.topic ?? '';
     final seq = message.seq ?? 0;
     final combinedId = '${topic}_$seq';
@@ -121,7 +120,10 @@ class ObjectBox {
   }
 
   void clearAll() {
-    // dataMessageBox.removeAll();
+    final dataMessageBox = Box<DataMessage>(store);
+    final topicBox = Box<LocalTopic>(store);
+    dataMessageBox.removeAll();
+    topicBox.removeAll();
   }
 
   /// Create an instance of ObjectBox to use throughout the app.
@@ -130,8 +132,6 @@ class ObjectBox {
     return ObjectBox._create(store);
   }
 
-  ObjectBox._create(this.store) {
-    dataMessageBox = Box<DataMessage>(store);
-  }
+  ObjectBox._create(this.store);
 
 }

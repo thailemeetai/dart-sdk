@@ -50,7 +50,7 @@ class TinodeService {
   /// Authentication service, responsible for managing credentials and user id
   late AuthService _authService;
 
-  late ObjectBox _objectbox;
+  ObjectBox? _objectbox;
 
   late Admin _admin;
 
@@ -77,7 +77,7 @@ class TinodeService {
     _configService = GetIt.I.get<ConfigService>();
     _cacheManager = GetIt.I.get<CacheManager>();
     _authService = GetIt.I.get<AuthService>();
-    _registerDatabase();
+    registerDatabase();
   }
 
   FutureManager get futureManager => _futureManager;
@@ -478,38 +478,40 @@ class TinodeService {
   }
 
   void closeDb() {
-    _objectbox.store.close();
+    _objectbox?.store.close();
     if (Admin.isAvailable()) {
       _admin.close();
     }
   }
 
   void storeDb(DataMessage data) {
-    _objectbox.addDataMessage(data);
+    _objectbox?.addDataMessage(data);
   }
 
   Future<void> storeMessagesToDb(List<DataMessage> list, {int? offset}) async {
-    await _objectbox.addDataMessages(list, offset: offset);
+    await _objectbox?.addDataMessages(list, offset: offset);
   }
 
   void updateMessageToDb(String topic, DataMessage message) {
-    _objectbox.updateMessage(topic, message);
+    _objectbox?.updateMessage(topic, message);
   }
 
-  void clearAll() {
-    _objectbox.clearAll();
+  void clearDb() {
+    _objectbox?.clearAll();
   }
 
   List<DataMessage> getMessagesWith(String topic, {int? offset, int? limit}) {
-    return _objectbox.getMessagesWith(topic, offset: offset, limit: limit);
+    return _objectbox?.getMessagesWith(topic, offset: offset, limit: limit) ?? [];
   }
 
-  Future<void> _registerDatabase() async {
-    _objectbox = await ObjectBox.create();
+  Future<void> registerDatabase() async {
+    if(_objectbox == null || _objectbox?.store.isClosed() == true) {
+      _objectbox = await ObjectBox.create();
+    }
 
     if (Admin.isAvailable()) {
       // Keep a reference until no longer needed or manually closed.
-      _admin = Admin(_objectbox.store);
+      _admin = Admin(_objectbox!.store);
     }
   }
 }
