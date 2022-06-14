@@ -166,6 +166,7 @@ class Topic {
 
   ReplaySubject<DataMessage?> onDataThroughLocal = ReplaySubject<DataMessage?>();
   int localOffset = 0;
+  bool isInitLoading = true;
 
   static const int DEFAULT_CACHE_MESSAGE_LIMIT = 50;
   static const int DEBOUNCE_MESSAGE_RECEIVED_TIME = 800;
@@ -185,11 +186,11 @@ class Topic {
           _cacheMessages.removeRange(0, cut);
           final set = insertedArray.toSet();
           _tinodeService.storeMessagesToDb(insertedArray, offset: 0).then((value) {
-            if(set.length == 1) {
-              // single msg
-              final singleMsg = insertedArray[0]; // data from tinode
-              localOffset++;
-              onDataThroughLocal.add(singleMsg);
+            if(!isInitLoading) {
+              for(final msg in set) {
+                localOffset++;
+                onDataThroughLocal.add(msg);
+              }
             }
           });
         }
@@ -198,6 +199,7 @@ class Topic {
       // open chat details
       Future.delayed(const Duration(milliseconds: GET_INIT_MESSAGES_DELAY_TIME)).then((_) {
         final initMessages = _tinodeService.getMessagesWith(topicName);
+        isInitLoading = false;
         for(final msg in initMessages) {
           localOffset++;
           onDataThroughLocal.add(msg);
