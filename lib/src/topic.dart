@@ -110,6 +110,8 @@ class Topic {
 
   String? _roomId;
 
+  final _logger = Logger();
+
   set roomId(String value) {
     _roomId = value;
   }
@@ -161,10 +163,11 @@ class Topic {
   PublishSubject<int> onAllMessagesReceived = PublishSubject<int>();
 
   final List<DataMessage> _cacheMessages = [];
-  BehaviorSubject<DataMessage> onMessageReceived = BehaviorSubject<DataMessage>();
-  final _logger = Logger();
+  BehaviorSubject<DataMessage> onMessageReceived =
+      BehaviorSubject<DataMessage>();
 
-  ReplaySubject<DataMessage?> onDataThroughLocal = ReplaySubject<DataMessage?>();
+  ReplaySubject<DataMessage?> onDataThroughLocal =
+      ReplaySubject<DataMessage?>();
   int localOffset = 0;
   bool isInitLoading = true;
 
@@ -177,17 +180,26 @@ class Topic {
     _resolveDependencies();
     name = topicName;
 
-    if(topicName != topic_names.TOPIC_ME) {
-      onMessageReceived.debounceTime(const Duration(milliseconds: DEBOUNCE_MESSAGE_RECEIVED_TIME)).listen((event) {
+    if (topicName != topic_names.TOPIC_ME) {
+      onMessageReceived
+          .debounceTime(
+              const Duration(milliseconds: DEBOUNCE_MESSAGE_RECEIVED_TIME))
+          .listen((event) {
         // store local db
-        while(_cacheMessages.isNotEmpty) {
-          final cut = _cacheMessages.length >= DEFAULT_CACHE_MESSAGE_LIMIT? DEFAULT_CACHE_MESSAGE_LIMIT: _cacheMessages.length;
+        while (_cacheMessages.isNotEmpty) {
+          final cut = _cacheMessages.length >= DEFAULT_CACHE_MESSAGE_LIMIT
+              ? DEFAULT_CACHE_MESSAGE_LIMIT
+              : _cacheMessages.length;
           final insertedArray = _cacheMessages.take(cut).toList();
           _cacheMessages.removeRange(0, cut);
           final set = insertedArray.toSet();
-          _tinodeService.storeMessagesToDb(insertedArray, offset: 0).then((value) {
-            if(!isInitLoading) {
-              for(final msg in set) {
+          _logger.i(
+              'onMessageReceived - insertedArray length: ${insertedArray.length}');
+          _tinodeService
+              .storeMessagesToDb(insertedArray, offset: 0)
+              .then((value) {
+            if (!isInitLoading) {
+              for (final msg in set) {
                 localOffset++;
                 onDataThroughLocal.add(msg);
               }
@@ -197,10 +209,11 @@ class Topic {
       });
 
       // open chat details
-      Future.delayed(const Duration(milliseconds: GET_INIT_MESSAGES_DELAY_TIME)).then((_) {
+      Future.delayed(const Duration(milliseconds: GET_INIT_MESSAGES_DELAY_TIME))
+          .then((_) {
         final initMessages = _tinodeService.getMessagesWith(topicName);
         isInitLoading = false;
-        for(final msg in initMessages) {
+        for (final msg in initMessages) {
           localOffset++;
           onDataThroughLocal.add(msg);
         }
@@ -212,10 +225,13 @@ class Topic {
     final l = limit ?? DEFAULT_MESSAGE_LIMIT;
     final o = offset ?? localOffset;
     final messages = _tinodeService.getMessagesWith(name!, limit: l, offset: o);
-    for(final msg in messages) {
+    _logger.d(
+        'fetchMoreLocalMessages with offset: $o, limit: $l, messages length: ${messages.length}');
+    for (final msg in messages) {
       localOffset++;
       onDataThroughLocal.add(msg);
     }
+    fetchMoreMessages(l);
   }
 
   void _resolveDependencies() {
@@ -878,7 +894,9 @@ class Topic {
 
     // onData.add(data);
     final headData = data.head;
-    if (headData != null && (headData.containsKey('reaction_to') || headData.containsKey('answer_to'))) {
+    if (headData != null &&
+        (headData.containsKey('reaction_to') ||
+            headData.containsKey('answer_to'))) {
       // update reaction + answer
       _tinodeService.updateMessageToDb(name!, data);
       onDataThroughLocal.add(data);
