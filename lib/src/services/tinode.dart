@@ -54,6 +54,8 @@ class TinodeService {
 
   late Admin _admin;
 
+  bool isConnected = false;
+
   /// This event will be triggered when a `ctrl` message is received
   PublishSubject<CtrlMessage> onCtrlMessage = PublishSubject<CtrlMessage>();
 

@@ -186,6 +186,7 @@ class Topic {
           _cacheMessages.removeRange(0, cut);
           final set = insertedArray.toSet();
           _tinodeService.storeMessagesToDb(insertedArray, offset: 0).then((value) {
+            // msg status & msg received
             if(!isInitLoading) {
               for(final msg in set) {
                 localOffset++;
@@ -197,7 +198,9 @@ class Topic {
       });
 
       // open chat details
-      Future.delayed(const Duration(milliseconds: GET_INIT_MESSAGES_DELAY_TIME)).then((_) {
+      final delayTime = _tinodeService.isConnected? GET_INIT_MESSAGES_DELAY_TIME: 0;
+      _logger.e('Internet# delayTime = $delayTime - isConnected = ${_tinodeService.isConnected}');
+      Future.delayed(Duration(milliseconds: delayTime)).then((_) {
         final initMessages = _tinodeService.getMessagesWith(topicName);
         isInitLoading = false;
         for(final msg in initMessages) {

@@ -10,6 +10,7 @@ import 'package:get_it/get_it.dart';
 import 'package:tinode/src/database/model.dart';
 import 'package:tinode/src/database/objectbox.dart';
 import 'package:tinode/src/database/objectbox.g.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'package:tinode/src/models/topic-names.dart' as topic_names;
 import 'package:tinode/src/models/server-configuration.dart';
@@ -141,7 +142,38 @@ class Tinode {
   }
 
   FutureManager get futureManager => _futureManager;
+
   final _logger = Logger();
+  ConnectivityResult _connectionStatus = ConnectivityResult.none;
+  final Connectivity _connectivity = Connectivity();
+  late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+
+  Future<void> initConnectivity() async {
+    late ConnectivityResult result;
+    try {
+      result = await _connectivity.checkConnectivity();
+    } catch (e) {
+      _logger.e('Couldn\'t check connectivity status ${e.toString()}');
+      return;
+    }
+    return _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    _connectionStatus = result;
+    switch (result) {
+      case ConnectivityResult.mobile:
+      case ConnectivityResult.wifi:
+        _tinodeService.isConnected = true;
+        return;
+      case ConnectivityResult.none:
+        _tinodeService.isConnected = false;
+        return;
+      default:
+        _tinodeService.isConnected = false;
+        return;
+    }
+  }
 
   /// Register services in dependency injection container
   void _registerDependencies(
@@ -192,6 +224,9 @@ class Tinode {
     _onConnectedSubscription ??= _connectionService.onOpen.listen((_) {
       _futureManager.checkExpiredFutures();
       onConnected.add(null);
+      initConnectivity();
+      _connectivitySubscription =
+          _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
       openDb();
     });
 
@@ -231,6 +266,7 @@ class Tinode {
       return MapEntry(key, value);
     });
     onDisconnect.add(null);
+    _connectivitySubscription.cancel();
     closeDb();
     // _tinodeService.closeDb();
   }
