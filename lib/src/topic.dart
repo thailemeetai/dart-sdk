@@ -172,9 +172,9 @@ class Topic {
   bool isInitLoading = true;
 
   static const int DEFAULT_CACHE_MESSAGE_LIMIT = 50;
-  static const int DEBOUNCE_MESSAGE_RECEIVED_TIME = 800;
-  static const int GET_INIT_MESSAGES_DELAY_TIME = 2700;
-  static const int DEFAULT_MESSAGE_LIMIT = 20;
+  static const int DEBOUNCE_MESSAGE_RECEIVED_TIME = 600;
+  static const int GET_INIT_MESSAGES_DELAY_TIME = 1700;
+  static const int DEFAULT_MESSAGE_LIMIT = DEFAULT_CACHE_MESSAGE_LIMIT;
 
   Topic(String topicName) {
     _resolveDependencies();
@@ -200,8 +200,7 @@ class Topic {
               .then((value) {
             if (!isInitLoading) {
               for (final msg in set) {
-                localOffset++;
-                onDataThroughLocal.add(msg);
+                _addDataThroughLocal(msg);
               }
             }
           });
@@ -214,24 +213,34 @@ class Topic {
         final initMessages = _tinodeService.getMessagesWith(topicName);
         isInitLoading = false;
         for (final msg in initMessages) {
-          localOffset++;
-          onDataThroughLocal.add(msg);
+          _addDataThroughLocal(msg);
         }
       });
     }
   }
 
-  void fetchMoreLocalMessages({int? limit, int? offset}) {
+  Future<void> fetchMoreLocalMessages({int? limit, int? offset}) async {
     final l = limit ?? DEFAULT_MESSAGE_LIMIT;
     final o = offset ?? localOffset;
-    final messages = _tinodeService.getMessagesWith(name!, limit: l, offset: o);
-    _logger.d(
-        'fetchMoreLocalMessages with offset: $o, limit: $l, messages length: ${messages.length}');
-    for (final msg in messages) {
-      localOffset++;
-      onDataThroughLocal.add(msg);
+    try {
+      final messages =
+          _tinodeService.getMessagesWith(name!, limit: l, offset: o);
+      _logger.d(
+          'fetchMoreLocalMessages with offset: $o, limit: $l, messages length: ${messages.length}');
+      for (final msg in messages) {
+        _addDataThroughLocal(msg);
+      }
+      await fetchMoreMessagesAsync(l);
+    } catch (error) {
+      rethrow;
     }
-    fetchMoreMessages(l);
+  }
+
+  void _addDataThroughLocal(DataMessage message) {
+    localOffset++;
+    _logger.d(
+        "_addDataThroughLocal - localOffset: $localOffset, message: ${message.toString()}");
+    onDataThroughLocal.add(message);
   }
 
   void _resolveDependencies() {
@@ -434,26 +443,15 @@ class Topic {
     return future;
   }
 
-  void fetchMoreMessages(int limit) async {
-    var query = startMetaQuery();
-    var response = await getMeta(query.withEarlierData(limit).build());
-    if (response is Map<String, dynamic>) {
-      var ctrl = CtrlMessage.fromMessage(response);
-      if (ctrl.params != null &&
-          (ctrl.params['count'] == null || ctrl.params['count'] == 0)) {
-        _noEarlierMsgs = true;
-      }
-    } else if (response is CtrlMessage) {
-      if (response.params != null &&
-          (response.params['count'] == null || response.params['count'] == 0)) {
-        _noEarlierMsgs = true;
-      }
-    }
-  }
-
   Future<void> fetchMoreMessagesAsync(int limit) async {
-    var query = startMetaQuery();
-    var response = await getMeta(query.withEarlierData(limit).build());
+    var response;
+    try {
+      var query = startMetaQuery();
+      response = await getMeta(query.withEarlierData(limit).build());
+    } catch (error) {
+      _logger.e('fetchMoreMessages with error: $error');
+      rethrow;
+    }
     if (response is Map<String, dynamic>) {
       var ctrl = CtrlMessage.fromMessage(response);
       if (ctrl.params != null &&
@@ -899,6 +897,7 @@ class Topic {
             headData.containsKey('answer_to'))) {
       // update reaction + answer
       _tinodeService.updateMessageToDb(name!, data);
+      // donot increase localOffset here
       onDataThroughLocal.add(data);
     } else {
       // insert batch messages
