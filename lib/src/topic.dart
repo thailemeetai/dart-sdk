@@ -208,7 +208,9 @@ class Topic {
       });
 
       // open chat details
-      Future.delayed(const Duration(milliseconds: GET_INIT_MESSAGES_DELAY_TIME))
+      final delayTime = _tinodeService.isConnected? GET_INIT_MESSAGES_DELAY_TIME: 0;
+      _logger.e('Internet# delayTime = $delayTime - isConnected = ${_tinodeService.isConnected}');
+      Future.delayed(Duration(milliseconds: delayTime))
           .then((_) {
         final initMessages = _tinodeService.getMessagesWith(topicName);
         isInitLoading = false;
