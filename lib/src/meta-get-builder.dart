@@ -37,7 +37,7 @@ class MetaGetBuilder {
   DateTime _getIms() {
     var cupd = contact != null ? contact?.updated : null;
     var tupd = topic.lastDescUpdate;
-    if(tupd != null) {
+    if (tupd != null) {
       return tupd.isAfter(cupd!) ? cupd : tupd;
     } else {
       return DateTime(0);
@@ -56,12 +56,12 @@ class MetaGetBuilder {
       return this;
     }
 
-    return withData((topic.maxSeq > 0 ? topic.maxSeq + 1 : null)!, null, limit);
+    return withData((topic.maxSeq > 0 ? topic.maxSeq + 1 : null), null, limit);
   }
 
   /// Add query parameters to fetch messages older than the earliest saved message
   MetaGetBuilder withEarlierData(int limit) {
-    return withData(null, (topic.minSeq > 0 ? topic.minSeq : null)!, limit);
+    return withData(null, (topic.minSeq > 0 ? topic.minSeq : null), limit);
   }
 
   /// Add query parameters to fetch topic description if it's newer than the given timestamp
@@ -115,7 +115,8 @@ class MetaGetBuilder {
     if (topic.getType() == 'me') {
       what['cred'] = true;
     } else {
-      _loggerService.error('Invalid topic type for MetaGetBuilder:withCreds ' + topic.getType().toString());
+      _loggerService.error('Invalid topic type for MetaGetBuilder:withCreds ' +
+          topic.getType().toString());
     }
     return this;
   }

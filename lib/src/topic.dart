@@ -224,7 +224,7 @@ class Topic {
     final o = offset ?? localOffset;
     try {
       final messages =
-          _tinodeService.getMessagesWith(name!, limit: l, offset: o);
+          _tinodeService.getMessagesWith(name ?? '', limit: l, offset: o);
       _logger.d(
           'fetchMoreLocalMessages with offset: $o, limit: $l, messages length: ${messages.length}');
       for (final msg in messages) {

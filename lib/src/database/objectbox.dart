@@ -1,12 +1,10 @@
-
 import 'package:logger/logger.dart';
 import 'package:tinode/src/database/objectbox.g.dart';
 
 import 'model.dart';
 
 class ObjectBox {
-
-  static const int DEFAULT_MESSAGE_LIMIT = 20;
+  static const int DEFAULT_MESSAGE_LIMIT = 50;
 
   static const int DEFAULT_MESSAGE_THRESHOLD_IN_TOPIC = 3000000;
 
@@ -16,7 +14,8 @@ class ObjectBox {
 
   List<DataMessage> getMessagesWith(String topic, {int? offset, int? limit}) {
     final msgBox = store.box<DataMessage>();
-    final builder = msgBox.query(DataMessage_.topic.equals(topic))..order(DataMessage_.seq, flags: Order.descending);
+    final builder = msgBox.query(DataMessage_.topic.equals(topic))
+      ..order(DataMessage_.seq, flags: Order.descending);
     final query = builder.build()
       ..offset = offset ?? 0
       ..limit = limit ?? DEFAULT_MESSAGE_LIMIT;
@@ -32,7 +31,7 @@ class ObjectBox {
     try {
       var localTopic = query.findFirst();
       int topicId;
-      if(localTopic == null) {
+      if (localTopic == null) {
         localTopic ??= LocalTopic(topic);
         topicId = topicBox.put(localTopic);
       } else {
@@ -40,20 +39,24 @@ class ObjectBox {
       }
       final headData = data.head;
       if (headData != null) {
-        if(headData.containsKey('reaction_to') && headData.containsKey('reaction')) {
+        if (headData.containsKey('reaction_to') &&
+            headData.containsKey('reaction')) {
           final updatedId = headData['reaction_to'];
           final reactions = headData['reaction'];
-          final id = topicId * DEFAULT_MESSAGE_THRESHOLD_IN_TOPIC + updatedId as int;
+          final id =
+              topicId * DEFAULT_MESSAGE_THRESHOLD_IN_TOPIC + updatedId as int;
           final msg = msgBox.get(id);
-          if(msg != null) {
+          if (msg != null) {
             msg.head?['reaction'] = reactions;
             msgBox.put(msg);
           }
         }
-        if(headData.containsKey('answer_to') && headData.containsKey('answers')) {
+        if (headData.containsKey('answer_to') &&
+            headData.containsKey('answers')) {
           final updatedId = headData['answer_to'];
           final answers = headData['answers'];
-          final id = topicId * DEFAULT_MESSAGE_THRESHOLD_IN_TOPIC + updatedId as int;
+          final id =
+              topicId * DEFAULT_MESSAGE_THRESHOLD_IN_TOPIC + updatedId as int;
           final msg = msgBox.get(id);
           if (msg != null) {
             if (msg.head?.containsKey('data') == true) {
@@ -63,7 +66,7 @@ class ObjectBox {
           }
         }
       }
-    } catch(e) {
+    } catch (e) {
       _logger.i('ObjectBox#Error Update Message = ${e.toString()}');
     } finally {
       query.close();
@@ -76,21 +79,23 @@ class ObjectBox {
     final seq = message.seq ?? 0;
     final combinedId = '${topic}_$seq';
 
-    final query = dataMessageBox.query(DataMessage_.combinedId.equals(combinedId)).build();
+    final query = dataMessageBox
+        .query(DataMessage_.combinedId.equals(combinedId))
+        .build();
     final existingMsg = query.findFirst();
 
-    if(existingMsg == null) {
+    if (existingMsg == null) {
       store.runInTransactionAsync(TxMode.write, _addDataMessageInTx, message);
     }
-
   }
 
   static void _addDataMessageInTx(Store store, DataMessage data) {
     store.box<DataMessage>().put(data);
   }
 
-  Future<void> addDataMessages(List<DataMessage> messages, {int? offset}) async {
-    if(messages.isEmpty) return;
+  Future<void> addDataMessages(List<DataMessage> messages,
+      {int? offset}) async {
+    if (messages.isEmpty) return;
     final topic = messages[0].topic ?? '';
     final topicBox = store.box<LocalTopic>();
     final msgBox = store.box<DataMessage>();
@@ -98,21 +103,21 @@ class ObjectBox {
     try {
       var localTopic = query2.findFirst();
       int topicId;
-      if(localTopic == null) {
+      if (localTopic == null) {
         localTopic ??= LocalTopic(topic);
         topicId = topicBox.put(localTopic);
       } else {
         topicId = localTopic.id;
       }
 
-      for(final msg in messages) {
+      for (final msg in messages) {
         msg.id = topicId * DEFAULT_MESSAGE_THRESHOLD_IN_TOPIC + (msg.seq ?? 0);
         msgBox.put(msg);
         // Then can safely add target Object to ToMany
         localTopic.messages.add(msg);
       }
       topicBox.put(localTopic);
-    } catch(e) {
+    } catch (e) {
       _logger.i('ObjectBox#Error Add Batch = ${e.toString()}');
     } finally {
       query2.close();
@@ -133,5 +138,4 @@ class ObjectBox {
   }
 
   ObjectBox._create(this.store);
-
 }
