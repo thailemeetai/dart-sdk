@@ -173,7 +173,7 @@ class Topic {
 
   static const int DEFAULT_CACHE_MESSAGE_LIMIT = 50;
   static const int DEBOUNCE_MESSAGE_RECEIVED_TIME = 600;
-  static const int GET_INIT_MESSAGES_DELAY_TIME = 1700;
+  static const int GET_INIT_MESSAGES_DELAY_TIME = 100;
   static const int DEFAULT_MESSAGE_LIMIT = DEFAULT_CACHE_MESSAGE_LIMIT;
 
   Topic(String topicName) {
@@ -208,10 +208,11 @@ class Topic {
       });
 
       // open chat details
-      final delayTime = _tinodeService.isConnected? GET_INIT_MESSAGES_DELAY_TIME: 0;
-      _logger.e('Internet# delayTime = $delayTime - isConnected = ${_tinodeService.isConnected}');
-      Future.delayed(Duration(milliseconds: delayTime))
-          .then((_) {
+      final delayTime =
+          _tinodeService.isConnected ? GET_INIT_MESSAGES_DELAY_TIME : 0;
+      _logger.e(
+          'Internet# delayTime = $delayTime - isConnected = ${_tinodeService.isConnected}');
+      Future.delayed(Duration(milliseconds: delayTime)).then((_) {
         final initMessages = _tinodeService.getMessagesWith(topicName);
         isInitLoading = false;
         for (final msg in initMessages) {
