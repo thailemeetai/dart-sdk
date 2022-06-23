@@ -110,7 +110,7 @@ class Topic {
 
   String? _roomId;
 
-  final _logger = Logger();
+  final _logger = Logger(printer: PrettyPrinter(printTime: true));
 
   set roomId(String value) {
     _roomId = value;
@@ -166,14 +166,13 @@ class Topic {
   BehaviorSubject<DataMessage> onMessageReceived =
       BehaviorSubject<DataMessage>();
 
-  ReplaySubject<DataMessage?> onDataThroughLocal =
-      ReplaySubject<DataMessage?>();
+  ReplaySubject<List<DataMessage>> onDataThroughLocal =
+      ReplaySubject<List<DataMessage>>();
   int localOffset = 0;
   bool isInitLoading = true;
 
   static const int DEFAULT_CACHE_MESSAGE_LIMIT = 50;
-  static const int DEBOUNCE_MESSAGE_RECEIVED_TIME = 600;
-  static const int GET_INIT_MESSAGES_DELAY_TIME = 100;
+  static const int DEBOUNCE_MESSAGE_RECEIVED_TIME = 300;
   static const int DEFAULT_MESSAGE_LIMIT = DEFAULT_CACHE_MESSAGE_LIMIT;
 
   Topic(String topicName) {
@@ -186,64 +185,39 @@ class Topic {
               const Duration(milliseconds: DEBOUNCE_MESSAGE_RECEIVED_TIME))
           .listen((event) {
         // store local db
-        while (_cacheMessages.isNotEmpty) {
-          final cut = _cacheMessages.length >= DEFAULT_CACHE_MESSAGE_LIMIT
-              ? DEFAULT_CACHE_MESSAGE_LIMIT
-              : _cacheMessages.length;
-          final insertedArray = _cacheMessages.take(cut).toList();
-          _cacheMessages.removeRange(0, cut);
-          final set = insertedArray.toSet();
-          _logger.i(
-              'onMessageReceived - insertedArray length: ${insertedArray.length}');
-          _tinodeService
-              .storeMessagesToDb(insertedArray, offset: 0)
-              .then((value) {
-            if (!isInitLoading) {
-              for (final msg in set) {
-                _addDataThroughLocal(msg);
-              }
-            }
-          });
+        if (_cacheMessages.isNotEmpty) {
+          if (!isInitLoading) {
+            _addDataThroughLocal(messages);
+          }
+          _tinodeService.storeMessagesToDb(_cacheMessages, offset: 0);
         }
       });
-
-      // open chat details
-      final delayTime =
-          _tinodeService.isConnected ? GET_INIT_MESSAGES_DELAY_TIME : 0;
-      _logger.e(
-          'Internet# delayTime = $delayTime - isConnected = ${_tinodeService.isConnected}');
-      Future.delayed(Duration(milliseconds: delayTime)).then((_) {
-        final initMessages = _tinodeService.getMessagesWith(topicName);
-        isInitLoading = false;
-        for (final msg in initMessages) {
-          _addDataThroughLocal(msg);
-        }
-      });
+      fetchMoreLocalMessages(isFirstPage: true);
     }
   }
 
-  Future<void> fetchMoreLocalMessages({int? limit, int? offset}) async {
-    final l = limit ?? DEFAULT_MESSAGE_LIMIT;
-    final o = offset ?? localOffset;
+  Future<void> fetchMoreLocalMessages(
+      {int limit = DEFAULT_MESSAGE_LIMIT,
+      int? offset,
+      bool isFirstPage = false}) async {
+    if (isFirstPage) {
+      localOffset = 0;
+    }
     try {
-      final messages =
-          _tinodeService.getMessagesWith(name ?? '', limit: l, offset: o);
+      final messages = _tinodeService.getMessagesWith(name ?? '',
+          limit: limit, offset: offset ?? localOffset);
       _logger.d(
-          'fetchMoreLocalMessages with offset: $o, limit: $l, messages length: ${messages.length}');
-      for (final msg in messages) {
-        _addDataThroughLocal(msg);
-      }
-      await fetchMoreMessagesAsync(l);
+          'fetchMoreLocalMessages with offset: $offset, limit: $limit, messages length: ${messages.length}');
+      _addDataThroughLocal(messages);
+      await fetchMoreMessagesAsync(limit);
     } catch (error) {
       rethrow;
     }
   }
 
-  void _addDataThroughLocal(DataMessage message) {
-    localOffset++;
-    _logger.d(
-        "_addDataThroughLocal - localOffset: $localOffset, message: ${message.toString()}");
-    onDataThroughLocal.add(message);
+  void _addDataThroughLocal(List<DataMessage> messages) {
+    onDataThroughLocal.add(messages);
+    localOffset += messages.length;
   }
 
   void _resolveDependencies() {
@@ -899,9 +873,9 @@ class Topic {
         (headData.containsKey('reaction_to') ||
             headData.containsKey('answer_to'))) {
       // update reaction + answer
-      _tinodeService.updateMessageToDb(name!, data);
+      _tinodeService.updateMessageToDb(name ?? '', data);
       // donot increase localOffset here
-      onDataThroughLocal.add(data);
+      onDataThroughLocal.add([data]);
     } else {
       // insert batch messages
       onMessageReceived.add(data);
