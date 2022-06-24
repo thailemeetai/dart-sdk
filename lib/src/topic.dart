@@ -169,7 +169,6 @@ class Topic {
   ReplaySubject<List<DataMessage>> onDataThroughLocal =
       ReplaySubject<List<DataMessage>>();
   int localOffset = 0;
-  bool isInitLoading = true;
 
   static const int DEFAULT_CACHE_MESSAGE_LIMIT = 50;
   static const int DEBOUNCE_MESSAGE_RECEIVED_TIME = 300;
@@ -183,13 +182,12 @@ class Topic {
       onMessageReceived
           .debounceTime(
               const Duration(milliseconds: DEBOUNCE_MESSAGE_RECEIVED_TIME))
-          .listen((event) {
+          .listen((event) async {
         // store local db
         if (_cacheMessages.isNotEmpty) {
-          if (!isInitLoading) {
-            _addDataThroughLocal(messages);
-          }
-          _tinodeService.storeMessagesToDb(_cacheMessages, offset: 0);
+          _addDataThroughLocal(messages);
+          unawaited(
+              _tinodeService.storeMessagesToDb(_cacheMessages, offset: 0));
         }
       });
       fetchMoreLocalMessages(isFirstPage: true);
@@ -202,14 +200,19 @@ class Topic {
       bool isFirstPage = false}) async {
     if (isFirstPage) {
       localOffset = 0;
+      offset = localOffset;
     }
     try {
       final messages = _tinodeService.getMessagesWith(name ?? '',
-          limit: limit, offset: offset ?? localOffset);
+          limit: isFirstPage ? limit * 3 : limit,
+          offset: offset ?? localOffset);
       _logger.d(
           'fetchMoreLocalMessages with offset: $offset, limit: $limit, messages length: ${messages.length}');
       _addDataThroughLocal(messages);
-      await fetchMoreMessagesAsync(limit);
+      // first page was retrieved when subscribe the topic
+      if (!isFirstPage) {
+        await fetchMoreMessagesAsync(limit);
+      }
     } catch (error) {
       rethrow;
     }
