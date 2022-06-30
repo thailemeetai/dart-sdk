@@ -313,9 +313,9 @@ class Tinode {
   }
 
   /// Close the current connection
-  void disconnect() {
+  Future<void> disconnect() async {
     _authService.disauthenticate();
-    _connectionService.disconnect();
+    await _connectionService.disconnect();
   }
 
   /// Send a network probe message to make sure the connection is alive

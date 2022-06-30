@@ -77,12 +77,12 @@ class ConnectionService {
   }
 
   /// Close current websocket connection
-  void disconnect() {
+  Future<void> disconnect() async {
     // _channel = null as IOWebSocketChannel;
     _channel = null;
     _connecting = false;
-    _ws?.close(status.goingAway);
     onDisconnect.add(null);
+    await _ws?.close(status.goingAway);
   }
 
   /// Send network probe to check if connection is indeed live
