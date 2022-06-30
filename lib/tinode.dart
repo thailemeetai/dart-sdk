@@ -314,6 +314,7 @@ class Tinode {
 
   /// Close the current connection
   void disconnect() {
+    _authService.disauthenticate();
     _connectionService.disconnect();
   }
 

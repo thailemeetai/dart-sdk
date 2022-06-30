@@ -64,9 +64,7 @@ class ConnectionService {
       _loggerService.error('Tinode chat - connecting with error: $error');
       rethrow;
     }
-
     onOpen.add('Opened');
-
     _loggerService.log('Connected.');
   }
 

@@ -1,13 +1,17 @@
+import 'package:get_it/get_it.dart';
 import 'package:rxdart/rxdart.dart';
 
 import 'package:tinode/src/models/server-messages.dart';
 import 'package:tinode/src/models/auth-token.dart';
+import 'package:tinode/src/services/logger.dart';
 
 class AuthService {
   String? _userId;
   String? _lastLogin;
   AuthToken? _authToken;
   bool _authenticated = false;
+
+  final LoggerService _loggerService = GetIt.I.get<LoggerService>();
 
   PublishSubject<OnLoginData> onLogin = PublishSubject<OnLoginData>();
 
@@ -44,7 +48,14 @@ class AuthService {
     _lastLogin = '';
     _authToken = null;
     _authenticated = false;
-    print('TinodeService#isAuthenticated#AuthService# reset user_id: $_userId');
+    _loggerService.log(
+        'TinodeService#isAuthenticated#AuthService# reset user_id: $_userId');
+  }
+
+  void disauthenticate() {
+    _authToken = null;
+    _authenticated = false;
+    _loggerService.log('Tinode chat#AuthService# disauthenticate');
   }
 
   void onLoginSuccessful(CtrlMessage? ctrl) {
@@ -61,7 +72,8 @@ class AuthService {
     _authenticated = (ctrl.code ?? 0) >= 200 && (ctrl.code ?? 0) < 300;
 
     if (params['token'] != null && params['expires'] != null) {
-      _authToken = AuthToken(params['token'], DateTime.parse(params['expires']));
+      _authToken =
+          AuthToken(params['token'], DateTime.parse(params['expires']));
     } else {
       _authToken = null;
     }
