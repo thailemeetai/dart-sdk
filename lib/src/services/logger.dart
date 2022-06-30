@@ -1,5 +1,6 @@
 import 'package:tinode/src/services/configuration.dart';
 import 'package:get_it/get_it.dart';
+import 'package:tinode/src/utils/pretty_logger.dart';
 
 class LoggerService {
   late ConfigService _configService;
@@ -10,19 +11,19 @@ class LoggerService {
 
   void error(String value) {
     if (_configService.loggerEnabled == true) {
-      print('ERROR: ' + value);
+      PrettyLogger.shared.e('ERROR: ' + value);
     }
   }
 
   void log(String value) {
     if (_configService.loggerEnabled == true) {
-      print('LOG: ' + value);
+      PrettyLogger.shared.i('LOG: ' + value);
     }
   }
 
   void warn(String value) {
     if (_configService.loggerEnabled == true) {
-      print('WARN: ' + value);
+      PrettyLogger.shared.w('WARN: ' + value);
     }
   }
 }

@@ -4,12 +4,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:logger/logger.dart';
-import 'package:objectbox/objectbox.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:get_it/get_it.dart';
-import 'package:tinode/src/database/model.dart';
-import 'package:tinode/src/database/objectbox.dart';
-import 'package:tinode/src/database/objectbox.g.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'package:tinode/src/models/topic-names.dart' as topic_names;
@@ -161,18 +157,6 @@ class Tinode {
 
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     _connectionStatus = result;
-    switch (result) {
-      case ConnectivityResult.mobile:
-      case ConnectivityResult.wifi:
-        _tinodeService.isConnected = true;
-        return;
-      case ConnectivityResult.none:
-        _tinodeService.isConnected = false;
-        return;
-      default:
-        _tinodeService.isConnected = false;
-        return;
-    }
   }
 
   /// Register services in dependency injection container

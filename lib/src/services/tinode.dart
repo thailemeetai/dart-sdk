@@ -54,8 +54,6 @@ class TinodeService {
 
   late Admin _admin;
 
-  bool isConnected = false;
-
   /// This event will be triggered when a `ctrl` message is received
   PublishSubject<CtrlMessage> onCtrlMessage = PublishSubject<CtrlMessage>();
 
@@ -503,11 +501,12 @@ class TinodeService {
   }
 
   List<DataMessage> getMessagesWith(String topic, {int? offset, int? limit}) {
-    return _objectbox?.getMessagesWith(topic, offset: offset, limit: limit) ?? [];
+    return _objectbox?.getMessagesWith(topic, offset: offset, limit: limit) ??
+        [];
   }
 
   Future<void> registerDatabase() async {
-    if(_objectbox == null || _objectbox?.store.isClosed() == true) {
+    if (_objectbox == null || _objectbox?.store.isClosed() == true) {
       _objectbox = await ObjectBox.create();
     }
 
