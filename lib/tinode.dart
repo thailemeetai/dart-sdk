@@ -143,6 +143,9 @@ class Tinode {
   ConnectivityResult _connectionStatus = ConnectivityResult.none;
   final Connectivity _connectivity = Connectivity();
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  bool _disconnectedManually = false;
+
+  bool get disconnectedManually => _disconnectedManually;
 
   Future<void> initConnectivity() async {
     late ConnectivityResult result;
@@ -157,6 +160,17 @@ class Tinode {
 
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
     _connectionStatus = result;
+    switch (result) {
+      case ConnectivityResult.mobile:
+      case ConnectivityResult.wifi:
+        return;
+      case ConnectivityResult.none:
+        unawaited(disconnect(isDisconnectManually: false));
+        return;
+      default:
+        unawaited(disconnect(isDisconnectManually: false));
+        return;
+    }
   }
 
   /// Register services in dependency injection container
@@ -309,13 +323,15 @@ class Tinode {
   Future connect({String? deviceToken}) async {
     _doSubscriptions();
     await _connectionService.connect();
+    _disconnectedManually = false;
     return hello(deviceToken: deviceToken);
   }
 
   /// Close the current connection
-  Future<void> disconnect() async {
+  Future<void> disconnect({bool isDisconnectManually = true}) async {
     _authService.disauthenticate();
     await _connectionService.disconnect();
+    _disconnectedManually = isDisconnectManually;
   }
 
   /// Send a network probe message to make sure the connection is alive
