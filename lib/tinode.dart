@@ -165,10 +165,8 @@ class Tinode {
       case ConnectivityResult.wifi:
         return;
       case ConnectivityResult.none:
-        unawaited(disconnect(isDisconnectManually: false));
         return;
       default:
-        unawaited(disconnect(isDisconnectManually: false));
         return;
     }
   }
