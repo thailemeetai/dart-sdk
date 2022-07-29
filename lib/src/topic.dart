@@ -343,7 +343,7 @@ class Topic {
       _loggerService.warn(e.toString());
       message.setStatus(message_status.FAILED);
       onData.add(null);
-      return Future.value(CtrlMessage());
+      rethrow;
     }
   }
 

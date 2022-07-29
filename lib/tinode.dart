@@ -4,12 +4,8 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:logger/logger.dart';
-import 'package:objectbox/objectbox.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:get_it/get_it.dart';
-import 'package:tinode/src/database/model.dart';
-import 'package:tinode/src/database/objectbox.dart';
-import 'package:tinode/src/database/objectbox.g.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 
 import 'package:tinode/src/models/topic-names.dart' as topic_names;
@@ -147,6 +143,9 @@ class Tinode {
   ConnectivityResult _connectionStatus = ConnectivityResult.none;
   final Connectivity _connectivity = Connectivity();
   late StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  bool _disconnectedManually = false;
+
+  bool get disconnectedManually => _disconnectedManually;
 
   Future<void> initConnectivity() async {
     late ConnectivityResult result;
@@ -164,13 +163,10 @@ class Tinode {
     switch (result) {
       case ConnectivityResult.mobile:
       case ConnectivityResult.wifi:
-        _tinodeService.isConnected = true;
         return;
       case ConnectivityResult.none:
-        _tinodeService.isConnected = false;
         return;
       default:
-        _tinodeService.isConnected = false;
         return;
     }
   }
@@ -325,12 +321,15 @@ class Tinode {
   Future connect({String? deviceToken}) async {
     _doSubscriptions();
     await _connectionService.connect();
+    _disconnectedManually = false;
     return hello(deviceToken: deviceToken);
   }
 
   /// Close the current connection
-  void disconnect() {
-    _connectionService.disconnect();
+  Future<void> disconnect({bool isDisconnectManually = true}) async {
+    _authService.disauthenticate();
+    await _connectionService.disconnect();
+    _disconnectedManually = isDisconnectManually;
   }
 
   /// Send a network probe message to make sure the connection is alive

@@ -50,32 +50,39 @@ class ConnectionService {
     if (isConnected) {
       _loggerService.warn('Reconnecting...');
     }
-    _connecting = true;
-    _ws = await WebSocket.connect(Tools.makeBaseURL(_options)).timeout(Duration(milliseconds: 5000));
-    _connecting = false;
-    _loggerService.log('Connected.');
-    _channel = IOWebSocketChannel(_ws!);
+    try {
+      _connecting = true;
+      _ws = await WebSocket.connect(Tools.makeBaseURL(_options))
+          .timeout(Duration(milliseconds: 5000));
+      _ws!.pingInterval = Duration(seconds: 20);
+      _connecting = false;
+      _channel = IOWebSocketChannel(_ws!);
+      _channel?.stream.listen((message) {
+        onMessage.add(message);
+      });
+    } catch (error) {
+      _loggerService.error('Tinode chat - connecting with error: $error');
+      rethrow;
+    }
     onOpen.add('Opened');
-    _channel?.stream.listen((message) {
-      onMessage.add(message);
-    });
+    _loggerService.log('Connected.');
   }
 
   /// Send a message through websocket websocket connection
   void sendText(String str) {
     if (!isConnected || _connecting) {
-      throw Exception('Tried sending data but you are not connected yet.');
+      throw Exception('503 - Tried sending data but you are disconnect.');
     }
     _channel?.sink.add(str);
   }
 
   /// Close current websocket connection
-  void disconnect() {
+  Future<void> disconnect() async {
     // _channel = null as IOWebSocketChannel;
     _channel = null;
     _connecting = false;
-    _ws?.close(status.goingAway);
     onDisconnect.add(null);
+    await _ws?.close(status.goingAway);
   }
 
   /// Send network probe to check if connection is indeed live
