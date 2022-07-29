@@ -65,6 +65,20 @@ class ObjectBox {
             msgBox.put(msg);
           }
         }
+        if (headData.containsKey('censor_to') &&
+            headData.containsKey('is_censored')) {
+          final updatedId = headData['censor_to'];
+          final isCensored = headData['is_censored'];
+          final id =
+              topicId * DEFAULT_MESSAGE_THRESHOLD_IN_TOPIC + updatedId as int;
+          final msg = msgBox.get(id);
+          if (msg != null) {
+            if (msg.head?.containsKey('data') == true) {
+              msg.head?['data']['is_censored'][msg.from] = isCensored;
+            }
+            msgBox.put(msg);
+          }
+        }
       }
     } catch (e) {
       _logger.i('ObjectBox#Error Update Message = ${e.toString()}');
