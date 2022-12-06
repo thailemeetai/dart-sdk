@@ -32,7 +32,6 @@ import 'package:tinode/tinode.dart';
 * Read [server-side](https://github.com/tinode/chat/blob/master/docs/API.md) API documentation to know about packets.
 * A complete documentation will be created soon.
 * You can see a simple example in `./example` directory.
-* For bugs and feature requests [open an issue](https://github.com/tinode/dart-sdk/issues/new)
 
 ## Platform support
 * Servers
