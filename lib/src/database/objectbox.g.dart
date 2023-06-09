@@ -268,11 +268,11 @@ ModelDefinition getObjectBoxModel() {
                   .vTableGet(buffer, rootOffset, 6, ''),
               id: const fb.Int64Reader().vTableGet(buffer, rootOffset, 4, 0));
           InternalToManyAccess.setRelInfo(
-              object.messages,
-              store,
-              RelInfo<DataMessage>.toOneBacklink(14, object.id,
-                  (DataMessage srcObject) => srcObject.localTopic),
-              store.box<LocalTopic>());
+            object.messages,
+            store,
+            RelInfo<DataMessage>.toOneBacklink(
+                14, object.id, (DataMessage srcObject) => srcObject.localTopic),
+          );
           return object;
         })
   };

@@ -8,14 +8,14 @@ environment:
 
 dependencies:
   rxdart: ^0.27.7
-  web_socket_channel: ^2.2.0
-  get_it: ^7.2.0
+  web_socket_channel: ^2.4.0
+  get_it: ^7.6.0
   equatable: ^2.0.5
-  logger: ^1.1.0
-  intl: ^0.17.0
-  objectbox: ^1.5.0
-  objectbox_flutter_libs: any
-  connectivity_plus: ^3.0.2
+  logger: ^1.4.0
+  intl: ^0.18.1
+  objectbox: ^2.0.0
+  objectbox_flutter_libs: 2.0.0
+  connectivity_plus: ^4.0.1
 
 dependency_overrides:
   archive: ^3.0.0
@@ -23,10 +23,10 @@ dependency_overrides:
   crypto: ^3.0.0
 
 dev_dependencies:
-  pedantic: ^1.11.0
+  pedantic: ^1.11.1
   test: ^1.17.5
-  objectbox_generator: any
-  build_runner: 2.3.2
+  objectbox_generator: 2.0.0
+  build_runner: 2.4.5
 
 objectbox:
   output_dir: src/database
